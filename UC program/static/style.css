@@ -1,0 +1,50 @@
+.inline {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    width: 240px;
+    row-gap: 10%;
+}
+
+.centre {
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 90px;
+}
+
+.num {
+    width: 80px;
+}
+
+.selection {
+    width: fit-content;
+    height: fit-content;
+    text-align: center;
+}
+
+.option {
+    text-align: left;
+}
+
+
+.single-event {
+    display: none;
+    grid-template-columns: 1fr 5fr;
+    width: 240px;
+    row-gap: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+.submit {
+    margin-top: 10px;
+}
+
+.output {
+    margin-top: 10px;
+}
+
+.output-container { 
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    width: 20%;
+}

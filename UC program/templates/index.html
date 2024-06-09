@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Document</title>
+</head>
+<body>
+    {% block content %}
+    <form method="POST">
+        <div class="inline">
+            <div class="centre">Roof Area:</div>
+            <div>
+            <input type="number" class="num" id="area" name="area" min="1" step=".00000001"> m<sup>2</sup>
+            </div>
+
+            <label for="type">Surface type:</label>
+            <select name="type" id="type" class="selection" method="POST">
+                <option value="no">-- Select option --</option>        
+                <option value="1" class="option">Galvanised uncoated new</option>
+                <option value="2" class="option">Galvanised uncoated old</option>
+                <option value="3" class="option">Colorsteel New</option>
+                <option value="4" class="option">Colorsteel Old</option>
+                <option value="5" class="option">Galvanised painted, older</option>        
+                <option value="6" class="option">Galvanised painted, newer</option>
+                <option value="7" class="option">Concrete, no Zn</option>
+                <option value="8" class="option">Concrete, Zn guttering</option>
+                <option value="9" class="option">Non-metallic</option>
+                <option value="10" class="option">Copper</option>
+            </select>
+
+            <label for="location">Location:</label>
+            <select name="location" id="location" class="selection">
+                <option value="no">-- Select option --</option>        
+                <option value="1" class="option">Auckland</option>
+                <option value="2" class="option">Christchurch</option>
+                <option value="3" class="option">Wellington</option>
+            </select>
+
+            <label for="event">Simulation:</label>
+            <select name="event" onclick="f()" id="event" class="selection">
+                <option value="no">-- Select option --</option>        
+                <option value="1" class="option">Full year</option>
+                <option value="2" class="option">Single event</option>
+            </select>
+            <br><br>
+        </div>
+
+        <div class="single-event" id="single-event">
+            
+            <div class="centre">ADD:</div>
+            <div>
+            <input type="number" class="num" id="quantity" name="ADD" min="0" step=".00000001"> day
+            </div>
+
+            <div class="centre">INT:</div>
+            <div>
+            <input type="number" class="num" id="quantity" name="INT" min="0" step=".00000001"> mm/h
+            </div>
+
+            <div class="centre">DUR:</div>
+            <div>
+            <input type="number" class="num" id="quantity" name="DUR" min="0" step=".00000001"> day
+            </div>
+
+            <div class="centre">PH:</div>
+            <div>
+            <input type="number" class="num" id="quantity" name="PH" min="0" step=".00000001">
+            </div>
+        </div>
+        <input type="submit" class="submit" id="submit">
+    </form>
+    {% if data %}
+    <div class="output">
+        <div class="output-container" id="output">
+            <div class="info-prompt">TSS:</div> 
+            <div class="info" id="TSS">{{ TSS }} mg</div>
+            <div class="info-prompt">TZn:</div> 
+            <div class="info" id="TZn">{{ TZn }} mg</div>
+            <div class="info-prompt">DZn:</div> 
+            <div class="info" id="DZn">{{ DZn }} mg</div>
+            <div class="info-prompt">TCu:</div> 
+            <div class="info" id="TCu">{{ TCu }} mg</div>
+            <div class="info-prompt">DCu:</div> 
+            <div class="info" id="DCu">{{ DCu }} mg</div>
+        </div>
+        <br>
+    {% endif %}
+    {% if graph %}
+        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
+    {% endif %}
+    </div>
+
+    <script type="text/javascript">
+        function f() {
+            var input = document.getElementById("event").value;
+            var x = document.getElementById("single-event");
+            if (input == 2){
+                x.style.display = "grid";
+            }
+            else{
+                x.style.display = "none";
+            }
+        }
+
+        var xValues = [];
+        var yValues = [];
+        generateData("Math.cos(x)", 0, 50, 1);
+
+        new Chart("myChart", {
+        type: "line",
+        data: {
+            labels: xValues,
+            datasets: [{
+            fill: false,
+            pointRadius: 5,
+            borderColor: "rgba(0,0,255,0.5)",
+            data: yValues
+            }]
+        },    
+        options: {
+            legend: {display: false},
+            title: {
+            display: true,
+            text: "Title",
+            fontSize: 16
+            }
+            
+        }
+        });
+        function generateData(value, i1, i2, step = 1) {
+            for (let x = i1; x <= i2; x += step) {
+                yValues.push((Math.round(eval(value)*1000))/1000);
+                xValues.push(x);
+            }
+        }
+    </script>
+    {% endblock %}
+</body>
+</html>

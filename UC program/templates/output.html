@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Document</title>
+</head>
+<body>
+    {% block content %}
+    <div class="output">
+        <div class="output-container" id="output">
+            <div class="info-prompt">TSS:</div> 
+            <div class="info" id="TSS">{{ TSS }} mg</div>
+            <div class="info-prompt">TZn:</div> 
+            <div class="info" id="TZn">{{ TZn }} mg</div>
+            <div class="info-prompt">DZn:</div> 
+            <div class="info" id="DZn">{{ DZn }} mg</div>
+            <div class="info-prompt">TCu:</div> 
+            <div class="info" id="TCu">{{ TCu }} mg</div>
+            <div class="info-prompt">DCu:</div> 
+            <div class="info" id="DCu">{{ DCu }} mg</div>
+        </div>
+        <br>
+    {% if graph %}
+        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
+    {% endif %}
+    </div>
+    {% endblock %}
+    <script type="text/javascript">
+
+        var xValues = [];
+        var yValues = [];
+        generateData("Math.cos(x)", 0, 50, 1);
+
+        new Chart("myChart", {
+        type: "line",
+        data: {
+            labels: xValues,
+            datasets: [{
+            fill: false,
+            pointRadius: 5,
+            borderColor: "rgba(0,0,255,0.5)",
+            data: yValues
+            }]
+        },    
+        options: {
+            legend: {display: false},
+            title: {
+            display: true,
+            text: "Title",
+            fontSize: 16
+            }
+            
+        }
+        });
+        function generateData(value, i1, i2, step = 1) {
+            for (let x = i1; x <= i2; x += step) {
+                yValues.push((Math.round(eval(value)*1000))/1000);
+                xValues.push(x);
+            }
+        }
+    </script>
+
+</body>
+</html>
