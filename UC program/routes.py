@@ -17,14 +17,22 @@ def rounded(num, sf):
 
 @app.route('/')
 def form():
-    return render_template('index.html')
+    roof_type = do_sql("SELECT * FROM Info WHERE type=1")
+    road_type = do_sql("SELECT * FROM Info WHERE type=2")
+    return render_template('index.html', roof_type=roof_type, road_type=road_type)
 
 
 @app.route('/', methods=['POST'])
 def form_post():
+    roof_type = do_sql("SELECT * FROM Info WHERE type=1")
+    road_type = do_sql("SELECT * FROM Info WHERE type=2")
+
+    graph = False
+    roof_data = False
+
     if request.form['area'] and request.form['type'] != "no" and request.form['event'] == "2":
         if request.form['ADD'] and request.form['INT'] and request.form['DUR'] and request.form['PH']:
-            coeff = do_sql("SELECT * FROM Info WHERE id = '{}'".format(int(request.form['type'])))
+            coeff = do_sql("SELECT * FROM Info WHERE id='{}'".format(int(request.form['type'])))
 
             Area = float(request.form['area'])
             ADD = float(request.form['ADD'])
@@ -116,9 +124,11 @@ def form_post():
             DZn = m1*TZn
             DZn = rounded(DZn, 4)
 
-            return render_template('index.html', TSS=TSS, TCu=TCu, DCu=DCu, TZn=TZn, DZn=DZn, data=True)
+            roof_data = True
         elif request.form['area'] and request.form['event'] == "2" and request.form['type'] != "no":
-            return render_template('index.html', graph=True, data=False)
+            graph = True
+    
+    return render_template('index.html',roof_type=roof_type, road_type=road_type, roof_TSS=TSS, roof_TCu=TCu, roof_DCu=DCu, roof_TZn=TZn, roof_DZn=DZn, roof_data=roof_data, graph=graph)
 
 
 if __name__ == "__main__":  # Last lines

@@ -1,3 +1,10 @@
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    width: 100%;
+    height: fit-content;
+}
+
 .inline {
     display: grid;
     grid-template-columns: 2fr 3fr;

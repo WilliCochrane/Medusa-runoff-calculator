@@ -10,95 +10,190 @@
 <body>
     {% block content %}
     <form method="POST">
-        <div class="inline">
-            <div class="centre">Roof Area:</div>
+        <div class="content-grid">
             <div>
-            <input type="number" class="num" id="area" name="area" min="1" step=".00000001"> m<sup>2</sup>
+                <div class="inline">
+                    <div class="centre">Roof Area:</div>
+                    <div>
+                        <input type="number" class="num" id="area" name="area" min="1" step=".00000001"> m<sup>2</sup>
+                    </div>
+
+                    <label for="type">Surface type:</label>
+                    <select name="type" id="type" class="selection" method="POST">
+                        <option value="no">-- Select option --</option>     
+                        {% for type in roof_type %}
+                        <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="event">Simulation:</label>
+                    <select name="event" onclick="roof_sy()" id="event" class="selection">
+                        <option value="no">-- Select option --</option>        
+                        <option value="1" class="option">Full year</option>
+                        <option value="2" class="option">Single event</option>
+                    </select>
+                </div>
+                <br>
+
+                <div class="single-event" id="single-event">
+                    
+                    <div class="centre">ADD:</div>
+                    <div>
+                        <input type="number" class="num" id="quantity" name="ADD" min="0" step=".00000001"> day
+                    </div>
+
+                    <div class="centre">INT:</div>
+                    <div>
+                        <input type="number" class="num" id="quantity" name="INT" min="0" step=".00000001"> mm/h
+                    </div>
+
+                    <div class="centre">DUR:</div>
+                    <div>
+                        <input type="number" class="num" id="quantity" name="DUR" min="0" step=".00000001"> h
+                    </div>
+
+                    <div class="centre">PH:</div>
+                    <div>
+                     <input type="number" class="num" id="quantity" name="PH" min="0" step=".00000001">
+                    </div>
+                </div>
+                <div class="full-year" id="full-year"> 
+                    <label for="location">Location:</label>
+                    <select name="location" id="location" class="selection">
+                        <option value="no">-- Select option --</option>        
+                        <option value="1" class="option">Auckland</option>
+                        <option value="2" class="option">Christchurch</option>
+                        <option value="3" class="option">Wellington</option>
+                    </select>
+                </div>
+                <input type="submit" class="submit" id="submit">
+
+                {% if roof_data %}
+                <div class="output">
+                    <div class="output-container" id="output">
+                        <div class="info-prompt">TSS:</div> 
+                        <div class="info" id="TSS">{{ roof_TSS }} mg</div>
+                        <div class="info-prompt">TZn:</div> 
+                        <div class="info" id="TZn">{{ roof_TZn }} mg</div>
+                        <div class="info-prompt">DZn:</div> 
+                        <div class="info" id="DZn">{{ roof_DZn }} mg</div>
+                        <div class="info-prompt">TCu:</div> 
+                        <div class="info" id="TCu">{{ roof_TCu }} mg</div>
+                        <div class="info-prompt">DCu:</div> 
+                        <div class="info" id="DCu">{{ roof_DCu }} mg</div>
+                    </div>
+                    <br>
+                    {% endif %}
+                    {% if graph %}
+                        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
+                    {% endif %}
+                </div>
+
+
+            <div>
+                <div class="inline">
+                    <div class="centre">Road Area:</div>
+                    <div>
+                        <input type="number" class="num" id="area" name="area" min="1" step=".00000001"> m<sup>2</sup>
+                    </div>
+
+                    <label for="type">Surface type:</label>
+                    <select name="road_type" id="road-type" class="selection" method="POST">
+                        <option value="no">-- Select option --</option>     
+                        {% for type in road_type %}
+                        <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="event">Simulation:</label>
+                    <select name="event" onclick="road_sy()" id="road-event" class="selection">
+                        <option value="no">-- Select option --</option>        
+                        <option value="1" class="option">Full year</option>
+                        <option value="2" class="option">Single event</option>
+                    </select>
+                </div>
+                <br>
+
+                <div class="single-event" id="road-single-event">
+                    
+                    <div class="centre">ADD:</div>
+                    <div>
+                    <input type="number" class="num" id="quantity" name="roadADD" min="0" step=".00000001"> day
+                    </div>
+
+                    <div class="centre">INT:</div>
+                    <div>
+                    <input type="number" class="num" id="quantity" name="roadINT" min="0" step=".00000001"> mm/h
+                    </div>
+
+                    <div class="centre">DUR:</div>
+                    <div>
+                    <input type="number" class="num" id="quantity" name="roadDUR" min="0" step=".00000001"> h
+                    </div>
+
+                    <div class="centre">PH:</div>
+                    <div>
+                    <input type="number" class="num" id="quantity" name="roadPH" min="0" step=".00000001">
+                    </div>
+                </div>
+                <div class="full-year" id="road-full-year"> 
+                    <label for="location">Location:</label>
+                    <select name="road_location" id="road_location" class="selection">
+                        <option value="no">-- Select option --</option>        
+                        <option value="1" class="option">Auckland</option>
+                        <option value="2" class="option">Christchurch</option>
+                        <option value="3" class="option">Wellington</option>
+                    </select>
+                </div>
+                <input type="submit" class="submit" id="submit">
+
+                {% if roof_data %}
+                <div class="output">
+                    <div class="output-container" id="road-output">
+                        <div class="info-prompt">TSS:</div> 
+                        <div class="info" id="TSS">{{ road_TSS }} mg</div>
+                        <div class="info-prompt">TZn:</div> 
+                        <div class="info" id="TZn">{{ road_TZn }} mg</div>
+                        <div class="info-prompt">DZn:</div> 
+                        <div class="info" id="DZn">{{ road_DZn }} mg</div>
+                        <div class="info-prompt">TCu:</div> 
+                        <div class="info" id="TCu">{{ road_TCu }} mg</div>
+                        <div class="info-prompt">DCu:</div> 
+                        <div class="info" id="DCu">{{ road_DCu }} mg</div>
+                    </div>
+                    <br>
+                    {% endif %}
+                    {% if graph %}
+                        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
+                    {% endif %}
+                </div>
             </div>
-
-            <label for="type">Surface type:</label>
-            <select name="type" id="type" class="selection" method="POST">
-                <option value="no">-- Select option --</option>        
-                <option value="1" class="option">Galvanised uncoated new</option>
-                <option value="2" class="option">Galvanised uncoated old</option>
-                <option value="3" class="option">Colorsteel New</option>
-                <option value="4" class="option">Colorsteel Old</option>
-                <option value="5" class="option">Galvanised painted, older</option>        
-                <option value="6" class="option">Galvanised painted, newer</option>
-                <option value="7" class="option">Concrete, no Zn</option>
-                <option value="8" class="option">Concrete, Zn guttering</option>
-                <option value="9" class="option">Non-metallic</option>
-                <option value="10" class="option">Copper</option>
-            </select>
-
-            <label for="event">Simulation:</label>
-            <select name="event" onclick="f()" id="event" class="selection">
-                <option value="no">-- Select option --</option>        
-                <option value="1" class="option">Full year</option>
-                <option value="2" class="option">Single event</option>
-            </select>
         </div>
-        <br>
-
-        <div class="single-event" id="single-event">
-            
-            <div class="centre">ADD:</div>
-            <div>
-            <input type="number" class="num" id="quantity" name="ADD" min="0" step=".00000001"> day
-            </div>
-
-            <div class="centre">INT:</div>
-            <div>
-            <input type="number" class="num" id="quantity" name="INT" min="0" step=".00000001"> mm/h
-            </div>
-
-            <div class="centre">DUR:</div>
-            <div>
-            <input type="number" class="num" id="quantity" name="DUR" min="0" step=".00000001"> h
-            </div>
-
-            <div class="centre">PH:</div>
-            <div>
-            <input type="number" class="num" id="quantity" name="PH" min="0" step=".00000001">
-            </div>
-        </div>
-        <div class="full-year" id="full-year"> 
-            <label for="location">Location:</label>
-            <select name="location" id="location" class="selection">
-                <option value="no">-- Select option --</option>        
-                <option value="1" class="option">Auckland</option>
-                <option value="2" class="option">Christchurch</option>
-                <option value="3" class="option">Wellington</option>
-            </select>
-        </div>
-        <input type="submit" class="submit" id="submit">
     </form>
-    {% if data %}
-    <div class="output">
-        <div class="output-container" id="output">
-            <div class="info-prompt">TSS:</div> 
-            <div class="info" id="TSS">{{ TSS }} mg</div>
-            <div class="info-prompt">TZn:</div> 
-            <div class="info" id="TZn">{{ TZn }} mg</div>
-            <div class="info-prompt">DZn:</div> 
-            <div class="info" id="DZn">{{ DZn }} mg</div>
-            <div class="info-prompt">TCu:</div> 
-            <div class="info" id="TCu">{{ TCu }} mg</div>
-            <div class="info-prompt">DCu:</div> 
-            <div class="info" id="DCu">{{ DCu }} mg</div>
-        </div>
-        <br>
-    {% endif %}
-    {% if graph %}
-        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
-    {% endif %}
-    </div>
 
     <script type="text/javascript">
-        function f() {
+        function roof_sy() {
             var input = document.getElementById("event").value;
             var FLInfo = document.getElementById("full-year");
             var SEInfo = document.getElementById("single-event");
+            if (input == 1){
+                FLInfo.style.display = "block"
+                SEInfo.style.display = "none";
+            }
+            else if (input == 2){
+                SEInfo.style.display = "grid";
+                FLInfo.style.display = "none";
+            }
+            else{
+                FLInfo.style.display = "none";
+                SEInfo.style.display = "none";
+            }
+        }
+
+        function road_sy() {
+            var input = document.getElementById("road-event").value;
+            var FLInfo = document.getElementById("road-full-year");
+            var SEInfo = document.getElementById("road-single-event");
             if (input == 1){
                 FLInfo.style.display = "block"
                 SEInfo.style.display = "none";
