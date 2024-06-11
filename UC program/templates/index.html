@@ -31,22 +31,14 @@
                 <option value="10" class="option">Copper</option>
             </select>
 
-            <label for="location">Location:</label>
-            <select name="location" id="location" class="selection">
-                <option value="no">-- Select option --</option>        
-                <option value="1" class="option">Auckland</option>
-                <option value="2" class="option">Christchurch</option>
-                <option value="3" class="option">Wellington</option>
-            </select>
-
             <label for="event">Simulation:</label>
             <select name="event" onclick="f()" id="event" class="selection">
                 <option value="no">-- Select option --</option>        
                 <option value="1" class="option">Full year</option>
                 <option value="2" class="option">Single event</option>
             </select>
-            <br><br>
         </div>
+        <br>
 
         <div class="single-event" id="single-event">
             
@@ -62,13 +54,22 @@
 
             <div class="centre">DUR:</div>
             <div>
-            <input type="number" class="num" id="quantity" name="DUR" min="0" step=".00000001"> day
+            <input type="number" class="num" id="quantity" name="DUR" min="0" step=".00000001"> h
             </div>
 
             <div class="centre">PH:</div>
             <div>
             <input type="number" class="num" id="quantity" name="PH" min="0" step=".00000001">
             </div>
+        </div>
+        <div class="full-year" id="full-year"> 
+            <label for="location">Location:</label>
+            <select name="location" id="location" class="selection">
+                <option value="no">-- Select option --</option>        
+                <option value="1" class="option">Auckland</option>
+                <option value="2" class="option">Christchurch</option>
+                <option value="3" class="option">Wellington</option>
+            </select>
         </div>
         <input type="submit" class="submit" id="submit">
     </form>
@@ -96,12 +97,19 @@
     <script type="text/javascript">
         function f() {
             var input = document.getElementById("event").value;
-            var x = document.getElementById("single-event");
-            if (input == 2){
-                x.style.display = "grid";
+            var FLInfo = document.getElementById("full-year");
+            var SEInfo = document.getElementById("single-event");
+            if (input == 1){
+                FLInfo.style.display = "block"
+                SEInfo.style.display = "none";
+            }
+            else if (input == 2){
+                SEInfo.style.display = "grid";
+                FLInfo.style.display = "none";
             }
             else{
-                x.style.display = "none";
+                FLInfo.style.display = "none";
+                SEInfo.style.display = "none";
             }
         }
 

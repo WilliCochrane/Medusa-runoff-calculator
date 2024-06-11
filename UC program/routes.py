@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template
-from math import exp, log
+from math import exp, log, e
 import sqlite3
 
 app = Flask(__name__)
@@ -71,7 +71,7 @@ def form_post():
             l1 = coeff[0][23]
             m1 = coeff[0][33]
 
-            # Calculate TSS
+            # Calculate TSS roof
             if INT < 20:
                 TSS = a1*(ADD**a2)*Area*(.75)*(1-exp(-k*INT*DUR))
             elif INT < 40:
@@ -84,31 +84,35 @@ def form_post():
                 TSS = a1*(ADD**a2)*Area*(1)*(1-exp(-k*INT*DUR))
             TSS = rounded(TSS, 4)
 
-            # Calculating TCu
+            # Calculating TCu roof
             Cu0 = (b1*PH**b2)*(b3*ADD**b4)*(b5*INT**b6)
             Cuest = b7*PH**b8
-            k = (-log(Cu0/Cuest))/(INT*Z)
+            K = (-log(Cu0/Cuest))/(INT*Z)
+            print(K)
             if DUR < Z:
-                TCu = Cu0*Area*(1/(1000*k))*(1-exp(-k*INT*DUR))
+                TCu = Cu0*Area*(1/K)*(1-exp(-K*INT*DUR))
             elif DUR >= Z:
-                TCu = Cuest*Area*INT*(DUR - Z)+Cu0*Area*(1/(1000*k))*(1-exp(-k*INT*Z))
+                TCu = Cuest*Area*INT*(DUR - Z)+Cu0*Area*(1/K)*(1-exp(-K*INT*Z))
             TCu = rounded(TCu, 4)
 
-            # Calculating TZn
+            # Calculating TZn roof
             Zn0 = (c1*PH+c2)*(c3*ADD**c4)*(c5*INT**c6)
+            print(Cu0)
             Znest = c7*PH+c8
-            k = (-log((Zn0/Znest)))/(INT*Z)
-            if DUR < Z:
-                TZn = Zn0*Area*(1/(1000*k))*(1-exp(-k*INT*DUR))
-            elif DUR >= Z:
-                TZn = Cuest*Area*INT*(DUR - Z)+Zn0*Area*(1/(1000*k))*(1-exp(-k*INT*Z))
+            print(Cuest)
+            K = (-log(Znest/Zn0))/(INT*Z)
+            if DUR <= Z:
+                TZn = Zn0*Area*(1/K)*(1-exp(K*INT*DUR))
+            elif DUR > Z:
+                TZn = Znest*Area*INT*(DUR-Z)+Zn0*Area*1/1000/K*(1-exp(-K*INT*Z))
+                print(TCu)
             TZn = rounded(TZn, 4)
 
-            # Calculating DCu
+            # Calculating DCu roof
             DCu = l1*TCu
             DCu = rounded(DCu, 4)
 
-            # Calculating DZn
+            # Calculating DZn roof
             DZn = m1*TZn
             DZn = rounded(DZn, 4)
 
