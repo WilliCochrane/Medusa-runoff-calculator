@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,21 +10,50 @@
 <body>
     {% block content %}
     <form method="POST">
-        <div class="content-grid">
-            <div>
+        <div>
+            <label for="surface">Surface:</label>
+                <select name="surface" onclick="surface_ty()" id="surface" class="selection">
+                    <option value="no">-- Select option --</option>        
+                    <option value="1" class="option">Roof</option>
+                    <option value="2" class="option">Road</option>
+                    <option value="3" class="option">Carpark</option>
+                </select>
+            <br>
+            <div id="inputs">
                 <div class="inline">
-                    <div class="centre">Roof Area:</div>
+                    <div class="centre">Surface Area:</div>
                     <div>
                         <input type="number" class="num" id="area" name="area" min="1" step=".00000001"> m<sup>2</sup>
                     </div>
 
-                    <label for="type">Surface type:</label>
-                    <select name="type" id="type" class="selection" method="POST">
-                        <option value="no">-- Select option --</option>     
-                        {% for type in roof_type %}
-                        <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                        {% endfor %}
-                    </select>
+                    <label for="type">Material type:</label>
+
+                    <div id="roof">
+                        <select name="roof_type" id="roof_type" class="selection" method="POST">
+                            <option value="no">-- Select option --</option>     
+                            {% for type in roof_type %}
+                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="road">
+                        <select name="road_type" id="road-type" class="selection" method="POST">
+                            <option value="no">-- Select option --</option>     
+                            {% for type in road_type %}
+                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="carpark">
+                        <select name="carpark_type" id="carpark_type" class="selection" method="POST">
+                            <option value="no">-- Select option --</option>     
+                            {% for type in carpark_type %}
+                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
                     <label for="event">Simulation:</label>
                     <select name="event" onclick="roof_sy()" id="event" class="selection">
@@ -67,111 +96,62 @@
                     </select>
                 </div>
                 <input type="submit" class="submit" id="submit">
-
-                {% if roof_data %}
-                <div class="output">
-                    <div class="output-container" id="output">
-                        <div class="info-prompt">TSS:</div> 
-                        <div class="info" id="TSS">{{ roof_TSS }} mg</div>
-                        <div class="info-prompt">TZn:</div> 
-                        <div class="info" id="TZn">{{ roof_TZn }} mg</div>
-                        <div class="info-prompt">DZn:</div> 
-                        <div class="info" id="DZn">{{ roof_DZn }} mg</div>
-                        <div class="info-prompt">TCu:</div> 
-                        <div class="info" id="TCu">{{ roof_TCu }} mg</div>
-                        <div class="info-prompt">DCu:</div> 
-                        <div class="info" id="DCu">{{ roof_DCu }} mg</div>
-                    </div>
-                    <br>
-                    {% endif %}
-                    {% if graph %}
-                        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
-                    {% endif %}
-                </div>
-
-
-            <div>
-                <div class="inline">
-                    <div class="centre">Road Area:</div>
-                    <div>
-                        <input type="number" class="num" id="area" name="area" min="1" step=".00000001"> m<sup>2</sup>
-                    </div>
-
-                    <label for="type">Surface type:</label>
-                    <select name="road_type" id="road-type" class="selection" method="POST">
-                        <option value="no">-- Select option --</option>     
-                        {% for type in road_type %}
-                        <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label for="event">Simulation:</label>
-                    <select name="event" onclick="road_sy()" id="road-event" class="selection">
-                        <option value="no">-- Select option --</option>        
-                        <option value="1" class="option">Full year</option>
-                        <option value="2" class="option">Single event</option>
-                    </select>
-                </div>
-                <br>
-
-                <div class="single-event" id="road-single-event">
-                    
-                    <div class="centre">ADD:</div>
-                    <div>
-                    <input type="number" class="num" id="quantity" name="roadADD" min="0" step=".00000001"> day
-                    </div>
-
-                    <div class="centre">INT:</div>
-                    <div>
-                    <input type="number" class="num" id="quantity" name="roadINT" min="0" step=".00000001"> mm/h
-                    </div>
-
-                    <div class="centre">DUR:</div>
-                    <div>
-                    <input type="number" class="num" id="quantity" name="roadDUR" min="0" step=".00000001"> h
-                    </div>
-
-                    <div class="centre">PH:</div>
-                    <div>
-                    <input type="number" class="num" id="quantity" name="roadPH" min="0" step=".00000001">
-                    </div>
-                </div>
-                <div class="full-year" id="road-full-year"> 
-                    <label for="location">Location:</label>
-                    <select name="road_location" id="road_location" class="selection">
-                        <option value="no">-- Select option --</option>        
-                        <option value="1" class="option">Auckland</option>
-                        <option value="2" class="option">Christchurch</option>
-                        <option value="3" class="option">Wellington</option>
-                    </select>
-                </div>
-                <input type="submit" class="submit" id="submit">
-
-                {% if roof_data %}
-                <div class="output">
-                    <div class="output-container" id="road-output">
-                        <div class="info-prompt">TSS:</div> 
-                        <div class="info" id="TSS">{{ road_TSS }} mg</div>
-                        <div class="info-prompt">TZn:</div> 
-                        <div class="info" id="TZn">{{ road_TZn }} mg</div>
-                        <div class="info-prompt">DZn:</div> 
-                        <div class="info" id="DZn">{{ road_DZn }} mg</div>
-                        <div class="info-prompt">TCu:</div> 
-                        <div class="info" id="TCu">{{ road_TCu }} mg</div>
-                        <div class="info-prompt">DCu:</div> 
-                        <div class="info" id="DCu">{{ road_DCu }} mg</div>
-                    </div>
-                    <br>
-                    {% endif %}
-                    {% if graph %}
-                        <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
-                    {% endif %}
-                </div>
             </div>
         </div>
+        {% if single %}
+        <div class="output">
+            <div class="output-container" id="road-output">
+                <div class="info-prompt">TSS:</div> 
+                <div class="info" id="TSS">{{ TSS }} mg</div>
+                <div class="info-prompt">TZn:</div> 
+                <div class="info" id="TZn">{{ TZn }} mg</div>
+                <div class="info-prompt">DZn:</div> 
+                <div class="info" id="DZn">{{ DZn }} mg</div>
+                <div class="info-prompt">TCu:</div> 
+                <div class="info" id="TCu">{{ TCu }} mg</div>
+                <div class="info-prompt">DCu:</div> 
+                <div class="info" id="DCu">{{ DCu }} mg</div>
+            </div>
+            <br>
+            {% endif %}
+        {% if graph %}
+        <div id="myChart" style="width:100%; max-width:600px; height:500px;"></div>
+        <div id="Graph-data" value="{{ graph_data }}"></div>
+        {% endif %}
     </form>
+    <script>
+        function surface_ty() {
+            var input = document.getElementById("surface").value;
+            var inputs = document.getElementById("inputs");
+            var road = document.getElementById("road");
+            var roof = document.getElementById("roof");
+            var carpark = document.getElementById("carpark");
+            if (input == 1){
+                inputs.style.display = "block";
+                roof.style.display = "block"
+                road.style.display = "none";
+                carpark.style.display = "none";
+            }
+            else if (input == 2){
+                inputs.style.display = "block";
+                road.style.display = "block"
+                roof.style.display = "none";
+                carpark.style.display = "none";
+            }
+            else if (input == 3){
+                inputs.style.display = "block";
+                carpark.style.display = "block";
+                roof.style.display = "none"
+                road.style.display = "none";
+            }
+            else{
+                roof.style.display = "none";
+                road.style.display = "none";
+                inputs.style.display = "none";
+                carpark.style.display = "none";
+            }
+        }
 
-    <script type="text/javascript">
         function roof_sy() {
             var input = document.getElementById("event").value;
             var FLInfo = document.getElementById("full-year");
@@ -208,38 +188,41 @@
             }
         }
 
-        var xValues = [];
-        var yValues = [];
-        generateData("Math.cos(x)", 0, 50, 1);
-
-        new Chart("myChart", {
-        type: "line",
-        data: {
-            labels: xValues,
-            datasets: [{
-            fill: false,
-            pointRadius: 5,
-            borderColor: "rgba(0,0,255,0.5)",
-            data: yValues
-            }]
-        },    
-        options: {
-            legend: {display: false},
-            title: {
-            display: true,
-            text: "Title",
-            fontSize: 16
-            }
-            
-        }
-        });
         function generateData(value, i1, i2, step = 1) {
             for (let x = i1; x <= i2; x += step) {
                 yValues.push((Math.round(eval(value)*1000))/1000);
                 xValues.push(x);
             }
         }
+
+        surface_ty();
+        roof_sy();
+        road_sy();
     </script>
+    <script>
+        google.charts.load('current',{packages:['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+        
+        function drawChart() {
+        
+        // Set Data
+        var graph_data = document.getElementById("Graph-data").value;
+        const data = google.visualization.arrayToDataTable(graph_data);
+        
+        // Set Options
+        const options = {
+          title: 'TSS',
+          hAxis: {title: 'Square Meters'},
+          vAxis: {title: 'Price in Millions'},
+          legend: 'none'
+        };
+        
+        // Draw
+        const chart = new google.visualization.LineChart(document.getElementById('myChart'));
+        chart.draw(data, options);
+        
+        }
+        </script>
     {% endblock %}
 </body>
 </html>
