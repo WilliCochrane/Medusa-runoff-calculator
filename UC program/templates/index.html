@@ -12,7 +12,7 @@
     <form method="POST">
         <div>
             <label for="surface">Surface:</label>
-                <select name="surface" onclick="surface_ty()" id="surface" class="selection">
+                <select name="surface" onclick="surface_ty()" id="surface" class="selection" required>
                     <option value="no">-- Select option --</option>        
                     <option value="1" class="option">Roof</option>
                     <option value="2" class="option">Road</option>
@@ -23,14 +23,14 @@
                 <div class="inline">
                     <div class="centre">Surface Area:</div>
                     <div>
-                        <input type="number" class="num" id="area" name="area" min="1" step=".00000001"> m<sup>2</sup>
+                        <input type="number" class="num" id="area" name="area" min="1" step=".00000001" required> m<sup>2</sup>
                     </div>
 
                     <label for="type">Material type:</label>
 
                     <div id="roof">
                         <select name="roof_type" id="roof_type" class="selection" method="POST">
-                            <option value="no">-- Select option --</option>     
+                            <option value="">-- Select option --</option>     
                             {% for type in roof_type %}
                             <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                             {% endfor %}
@@ -39,7 +39,7 @@
 
                     <div id="road">
                         <select name="road_type" id="road-type" class="selection" method="POST">
-                            <option value="no">-- Select option --</option>     
+                            <option value="">-- Select option --</option>     
                             {% for type in road_type %}
                             <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                             {% endfor %}
@@ -48,7 +48,7 @@
 
                     <div id="carpark">
                         <select name="carpark_type" id="carpark_type" class="selection" method="POST">
-                            <option value="no">-- Select option --</option>     
+                            <option value="">-- Select option --</option>     
                             {% for type in carpark_type %}
                             <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                             {% endfor %}
@@ -56,7 +56,7 @@
                     </div>
 
                     <label for="event">Simulation:</label>
-                    <select name="event" onclick="roof_sy()" id="event" class="selection">
+                    <select name="event" onclick="roof_sy()" id="event" class="selection" required>
                         <option value="no">-- Select option --</option>        
                         <option value="1" class="option">Full year</option>
                         <option value="2" class="option">Single event</option>
@@ -68,22 +68,22 @@
                     
                     <div class="centre">ADD:</div>
                     <div>
-                        <input type="number" class="num" id="quantity" name="ADD" min="0" step=".00000001"> day
+                        <input type="number" class="num" id="ADDipt" name="ADD" min="0" step=".00000001" required> day
                     </div>
 
                     <div class="centre">INT:</div>
                     <div>
-                        <input type="number" class="num" id="quantity" name="INT" min="0" step=".00000001"> mm/h
+                        <input type="number" class="num" id="INTipt" name="INT" min="0" step=".00000001" required> mm/h
                     </div>
 
                     <div class="centre">DUR:</div>
                     <div>
-                        <input type="number" class="num" id="quantity" name="DUR" min="0" step=".00000001"> h
+                        <input type="number" class="num" id="DURipt" name="DUR" min="0" step=".00000001" required> h
                     </div>
 
                     <div class="centre">PH:</div>
                     <div>
-                     <input type="number" class="num" id="quantity" name="PH" min="0" step=".00000001">
+                     <input type="number" class="num" id="PHipt" name="PH" min="0" step=".00000001" required>
                     </div>
                 </div>
                 <div class="full-year" id="full-year"> 
@@ -95,10 +95,11 @@
                         <option value="3" class="option">Wellington</option>
                     </select>
                 </div>
-                <input type="submit" class="submit" id="submit">
+                <button type="submit" class="submit" id="submit">Submit</button>
             </div>
         </div>
-        {% if single %}
+    </form>
+    {% if single %}
         <div class="output">
             <div class="output-container" id="road-output">
                 <div class="info-prompt">TSS:</div> 
@@ -118,7 +119,6 @@
         <div id="myChart" style="width:100%; max-width:600px; height:500px;"></div>
         <div id="Graph-data" value="{{ graph_data }}"></div>
         {% endif %}
-    </form>
     <script>
         function surface_ty() {
             var input = document.getElementById("surface").value;
@@ -126,23 +126,39 @@
             var road = document.getElementById("road");
             var roof = document.getElementById("roof");
             var carpark = document.getElementById("carpark");
+
+            var road_type = document.getElementById("road_type");
+            var roof_type = document.getElementById("roof_type");
+            var carpark_type = document.getElementById("carpark_type");
             if (input == 1){
                 inputs.style.display = "block";
                 roof.style.display = "block"
                 road.style.display = "none";
                 carpark.style.display = "none";
+                
+                road_type.required = false;
+                roof_type.required = true;
+                carpark_type.required = false;
             }
             else if (input == 2){
                 inputs.style.display = "block";
                 road.style.display = "block"
                 roof.style.display = "none";
                 carpark.style.display = "none";
+
+                road_type.required = true;
+                roof_type.required = false;
+                carpark_type.required = false;
             }
             else if (input == 3){
                 inputs.style.display = "block";
                 carpark.style.display = "block";
                 roof.style.display = "none"
                 road.style.display = "none";
+
+                road_type.required = false;
+                roof_type.required = false;
+                carpark_type.required = true;
             }
             else{
                 roof.style.display = "none";
@@ -174,13 +190,26 @@
             var input = document.getElementById("road-event").value;
             var FLInfo = document.getElementById("road-full-year");
             var SEInfo = document.getElementById("road-single-event");
+
+            var ADD = document.getElementById("ADDipt");
+            var INT = document.getElementById("INTipt");
+            var DUR = document.getElementById("DURipt");
+            var PH = document.getElementById("PHipt");
             if (input == 1){
                 FLInfo.style.display = "block"
                 SEInfo.style.display = "none";
+                ADD.required = false;
+                INT.required = false;
+                DUR.required = false;
+                PH.required = false;
             }
             else if (input == 2){
                 SEInfo.style.display = "grid";
                 FLInfo.style.display = "none";
+                ADD.required = true;
+                INT.required = true;
+                DUR.required = true;
+                PH.required = true;
             }
             else{
                 FLInfo.style.display = "none";
