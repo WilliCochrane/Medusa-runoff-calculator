@@ -11,14 +11,20 @@
     {% block content %}
     <form method="POST">
         <div>
-            <label for="surface">Surface:</label>
-                <select name="surface" onclick="surface_ty()" id="surface" class="selection" required>
-                    <option value="no">-- Select option --</option>        
-                    <option value="1" class="option">Roof</option>
-                    <option value="2" class="option">Road</option>
-                    <option value="3" class="option">Carpark</option>
-                </select>
-            <br>
+            <div class="surface">
+                <div>Roof</div>
+                <div>
+                <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty()" checked>
+                </div>
+                <div>Road</div>
+                <div>
+                <input class="check" type="checkbox" id="road_" name="road_" onclick="onlyOne(this),surface_ty()">
+                </div>
+                <div>Carpark</div>
+                <div>
+                <input class="check" type="checkbox" id="carpark_" name="carpark_" onclick="onlyOne(this),surface_ty()">
+                </div>
+            </div>
             <div id="inputs">
                 <div class="inline">
                     <div class="centre">Surface Area:</div>
@@ -29,26 +35,26 @@
                     <label for="type">Material type:</label>
 
                     <div id="roof">
-                        <select name="roof_type" id="roof_type" class="selection" method="POST">
-                            <option value="">-- Select option --</option>     
+                        <select name="roof_type" id="roof_type" class="selection" method="POST" required>
+                            <option value="">-- Select option --</option>
                             {% for type in roof_type %}
                             <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <div id="road">
-                        <select name="road_type" id="road-type" class="selection" method="POST">
-                            <option value="">-- Select option --</option>     
+                    <div id="road" style="display: none;">
+                        <select name="road_type" id="road_type" class="selection" method="POST" required>
+                            <option value="">-- Select option --</option>
                             {% for type in road_type %}
                             <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <div id="carpark">
-                        <select name="carpark_type" id="carpark_type" class="selection" method="POST">
-                            <option value="">-- Select option --</option>     
+                    <div id="carpark" style="display: none;">
+                        <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
+                            <option value="">-- Select option --</option>
                             {% for type in carpark_type %}
                             <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                             {% endfor %}
@@ -57,11 +63,12 @@
 
                     <label for="event">Simulation:</label>
                     <select name="event" onclick="roof_sy()" id="event" class="selection" required>
-                        <option value="no">-- Select option --</option>        
+                        <option value="no">-- Select option --</option>
                         <option value="1" class="option">Full year</option>
                         <option value="2" class="option">Single event</option>
                     </select>
                 </div>
+
                 <br>
 
                 <div class="single-event" id="single-event">
@@ -121,7 +128,6 @@
         {% endif %}
     <script>
         function surface_ty() {
-            var input = document.getElementById("surface").value;
             var inputs = document.getElementById("inputs");
             var road = document.getElementById("road");
             var roof = document.getElementById("roof");
@@ -130,41 +136,38 @@
             var road_type = document.getElementById("road_type");
             var roof_type = document.getElementById("roof_type");
             var carpark_type = document.getElementById("carpark_type");
-            if (input == 1){
+            if (document.getElementById("roof_").checked) {
                 inputs.style.display = "block";
-                roof.style.display = "block"
+                roof.style.display = "block";
                 road.style.display = "none";
                 carpark.style.display = "none";
-                
-                road_type.required = false;
-                roof_type.required = true;
-                carpark_type.required = false;
-            }
-            else if (input == 2){
+
+                road_type.removeAttribute("required");
+                roof_type.setAttribute("required", "required");
+                carpark_type.removeAttribute("required");
+            } else if (document.getElementById("road_").checked) {
                 inputs.style.display = "block";
-                road.style.display = "block"
+                road.style.display = "block";
                 roof.style.display = "none";
                 carpark.style.display = "none";
 
-                road_type.required = true;
-                roof_type.required = false;
-                carpark_type.required = false;
-            }
-            else if (input == 3){
+                road_type.setAttribute("required", "required");
+                roof_type.removeAttribute("required");
+                carpark_type.removeAttribute("required");
+            } else if (document.getElementById("carpark_").checked) {
                 inputs.style.display = "block";
                 carpark.style.display = "block";
-                roof.style.display = "none"
-                road.style.display = "none";
-
-                road_type.required = false;
-                roof_type.required = false;
-                carpark_type.required = true;
-            }
-            else{
                 roof.style.display = "none";
                 road.style.display = "none";
-                inputs.style.display = "none";
+
+                road_type.removeAttribute("required");
+                roof_type.removeAttribute("required");
+                carpark_type.setAttribute("required", "required");
+            } else {
+                roof.style.display = "none";
+                road.style.display = "none";
                 carpark.style.display = "none";
+                inputs.style.display = "none";
             }
         }
 
@@ -172,44 +175,27 @@
             var input = document.getElementById("event").value;
             var FLInfo = document.getElementById("full-year");
             var SEInfo = document.getElementById("single-event");
-            if (input == 1){
-                FLInfo.style.display = "block"
-                SEInfo.style.display = "none";
-            }
-            else if (input == 2){
-                SEInfo.style.display = "grid";
-                FLInfo.style.display = "none";
-            }
-            else{
-                FLInfo.style.display = "none";
-                SEInfo.style.display = "none";
-            }
-        }
-
-        function road_sy() {
-            var input = document.getElementById("road-event").value;
-            var FLInfo = document.getElementById("road-full-year");
-            var SEInfo = document.getElementById("road-single-event");
 
             var ADD = document.getElementById("ADDipt");
             var INT = document.getElementById("INTipt");
             var DUR = document.getElementById("DURipt");
             var PH = document.getElementById("PHipt");
             if (input == 1){
-                FLInfo.style.display = "block"
+                FLInfo.style.display = "block";
                 SEInfo.style.display = "none";
-                ADD.required = false;
-                INT.required = false;
-                DUR.required = false;
-                PH.required = false;
+                ADD.removeAttribute("required");
+                INT.removeAttribute("required");
+                DUR.removeAttribute("required");
+                PH.removeAttribute("required");
+                
             }
             else if (input == 2){
                 SEInfo.style.display = "grid";
                 FLInfo.style.display = "none";
-                ADD.required = true;
-                INT.required = true;
-                DUR.required = true;
-                PH.required = true;
+                ADD.setAttribute("required", "required");
+                INT.setAttribute("required", "required");
+                DUR.setAttribute("required", "required");
+                PH.setAttribute("required", "required");
             }
             else{
                 FLInfo.style.display = "none";
@@ -224,9 +210,17 @@
             }
         }
 
+        function onlyOne(checkbox) {
+            var checkboxes = document.getElementsByClassName("check")
+            for (let i = 0; i < checkboxes.length;i++) {
+                if (checkboxes.item(i) !== checkbox){
+                    checkboxes.item(i).checked = false;
+                }
+            }
+        }
+
         surface_ty();
         roof_sy();
-        road_sy();
     </script>
     <script>
         google.charts.load('current',{packages:['corechart']});
@@ -235,7 +229,7 @@
         function drawChart() {
         
         // Set Data
-        var graph_data = document.getElementById("Graph-data").value;
+        var graph_data = document.getElementById("Graph-data");
         const data = google.visualization.arrayToDataTable(graph_data);
         
         // Set Options

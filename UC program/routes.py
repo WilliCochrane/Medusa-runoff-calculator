@@ -72,6 +72,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
             TSS = a1*(ADD**a2)*Area*(a5*INT+a6)*(1-exp(-k*INT*DUR))
         else:
             TSS = a1*(ADD**a2)*Area*(1)*(1-exp(-k*INT*DUR))
+        TSS *= 1000
 
         # Calculating TCu roof
         Cu0 = (b1*PH**b2)*(b3*ADD**b4)*(b5*INT**b6)
@@ -101,13 +102,16 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     elif surface == 2 or surface == 3:
         # Calculating TSS road/carpark
         if INT < 40:
-            TSS = Area*(a1*ADD**a2)*(a7*INT)*(1-exp(-k*INT*DUR))
+            TSS = a1*ADD**a2*Area*INT*(1-exp(-k*INT*DUR))
+            print("y")
+            print(TSS)
+            print((1-exp(-k*INT*DUR)))
         elif INT < 90:
-            TSS = Area*(a1*ADD**a2)*.50*(1-exp(-k*INT*DUR))
+            TSS = Area*a1*ADD**a2*.50*(1-exp(-k*INT*DUR))
         elif INT < 130:
-            TSS = Area*(a1*ADD**a2)*(a8*INT+a9)*(1-exp(-k*INT*DUR))
+            TSS = Area*a1*ADD**a2*(a8*INT+a9)*(1-exp(-k*INT*DUR))
         elif INT >= 130:
-            TSS = Area*(a1*ADD**a2)*1.00*(1-exp(-k*INT*DUR))
+            TSS = Area*a1*ADD**a2*1.00*(1-exp(-k*INT*DUR))
         
         # Calculating TCu road/carpark
         TCu = g1*TSS
@@ -120,6 +124,8 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 
         # Calculating TZn road/carpark
         DZn = m1*TZn
+
+        TSS *= 1000
     
     TSS = rounded(TSS, sigfig)
     TCu = rounded(TCu, sigfig)
@@ -158,13 +164,16 @@ def form_post():
     graph = False
     single = False
     data = []
-    surface = int(request.form['surface'])
-    if surface == 1:
+    print(request.form.get("roof_"))
+    if request.form.get("roof_") == "on":
         Type = request.form['roof_type']
-    elif surface == 2:
+        surface = 1
+    elif request.form.get("road_") == "on":
         Type = request.form['road_type']
-    elif surface == 3:
+        surface = 2
+    elif request.form.get("carpark_") == "on":
         Type = request.form['carpark_type']
+        surface = 3
     
     if int(request.form['event']) == 2:
         Area = float(request.form['area'])
@@ -177,14 +186,15 @@ def form_post():
         return render_template('index.html',roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, TSS=data[0], TCu=data[1], DCu=data[2], TZn=data[3], DZn=data[4], single=single, graph=graph)
     elif int(request.form['event']) == 1:
         graph = True
-        surface = int(request.form['surface'])
-        if surface == 1:
+        if request.form.get("roof_") == "on":
             Type = request.form['roof_type']
-        elif surface == 2:
+            surface = 1
+        elif request.form.get("road_") == "on":
             Type = request.form['road_type']
-        elif surface == 3:
+            surface = 2
+        elif request.form.get("carpark_") == "on":
             Type = request.form['carpark_type']
-        Area = float(request.form['area'])
+            surface = 3
         graph_data = csv_to_data("static\climate_data\climate_events_2011_CCC.csv", Area, Type, surface)
         return render_template('index.html', roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, graph=graph, single=single, graph_data=graph_data)
 

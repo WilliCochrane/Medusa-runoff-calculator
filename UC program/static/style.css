@@ -62,3 +62,13 @@
     grid-template-columns: 1fr 4fr;
     width: 20%;
 }
+
+.surface {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: fit-content;
+}
+
+.check {
+    ch
+}
