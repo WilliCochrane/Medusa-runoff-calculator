@@ -2,6 +2,7 @@ from flask import Flask, request, render_template
 from math import exp, log, log10, floor
 import sqlite3
 import csv
+import json
 
 app = Flask(__name__)
 
@@ -103,30 +104,22 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
         # Calculating TSS road/carpark
         if INT < 40:
             TSS = a1*ADD**a2*Area*INT*(1-exp(-k*INT*DUR))
-            print("y")
-            print(TSS)
-            print((1-exp(-k*INT*DUR)))
         elif INT < 90:
             TSS = Area*a1*ADD**a2*.50*(1-exp(-k*INT*DUR))
         elif INT < 130:
             TSS = Area*a1*ADD**a2*(a8*INT+a9)*(1-exp(-k*INT*DUR))
         elif INT >= 130:
             TSS = Area*a1*ADD**a2*1.00*(1-exp(-k*INT*DUR))
-        
         # Calculating TCu road/carpark
         TCu = g1*TSS
-
         # Calculating TZn road/carpark
         TZn = h1*TSS
-
         # Calculating TCu road/carpark
         DCu = l1*TCu
-
         # Calculating TZn road/carpark
         DZn = m1*TZn
 
         TSS *= 1000
-    
     TSS = rounded(TSS, sigfig)
     TCu = rounded(TCu, sigfig)
     TZn = rounded(TZn, sigfig)
@@ -137,14 +130,25 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 
 def csv_to_data(fileDir, Area, Type, surface):
     with open(fileDir,newline='') as csvfile:
-        graphData = [["x","y"]]
+        graphData = []
         fileReader = csv.reader(csvfile)
         for row in fileReader:
-            print(row)
             if row[0].isnumeric():
                 graphData.append([int(row[0]),calculateRunoff(Area,float(row[2]),float(row[3]),float(row[4]),float(row[1]),Type,surface)[0]])
-    print(graphData)
     return graphData
+
+
+def get_surface():
+    if request.form.get("roof_") == "on":
+        Type = request.form['roof_type']
+        surface = 1
+    elif request.form.get("road_") == "on":
+        Type = request.form['road_type']
+        surface = 2
+    elif request.form.get("carpark_") == "on":
+        Type = request.form['carpark_type']
+        surface = 3
+    return [surface,Type]
             
 
 @app.route('/')
@@ -164,16 +168,8 @@ def form_post():
     graph = False
     single = False
     data = []
-    print(request.form.get("roof_"))
-    if request.form.get("roof_") == "on":
-        Type = request.form['roof_type']
-        surface = 1
-    elif request.form.get("road_") == "on":
-        Type = request.form['road_type']
-        surface = 2
-    elif request.form.get("carpark_") == "on":
-        Type = request.form['carpark_type']
-        surface = 3
+    surface = get_surface()[0]
+    Type = get_surface()[1]
     
     if int(request.form['event']) == 2:
         Area = float(request.form['area'])
@@ -184,19 +180,14 @@ def form_post():
         single = True
         data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
         return render_template('index.html',roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, TSS=data[0], TCu=data[1], DCu=data[2], TZn=data[3], DZn=data[4], single=single, graph=graph)
+    # Full year simulation
     elif int(request.form['event']) == 1:
+        Area = float(request.form['area'])
         graph = True
-        if request.form.get("roof_") == "on":
-            Type = request.form['roof_type']
-            surface = 1
-        elif request.form.get("road_") == "on":
-            Type = request.form['road_type']
-            surface = 2
-        elif request.form.get("carpark_") == "on":
-            Type = request.form['carpark_type']
-            surface = 3
+        surface = get_surface()[0]
+        Type = get_surface()[1]
         graph_data = csv_to_data("static\climate_data\climate_events_2011_CCC.csv", Area, Type, surface)
-        return render_template('index.html', roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, graph=graph, single=single, graph_data=graph_data)
+        return render_template('index.html', roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, graph=graph, single=single, graph_data=json.dumps(graph_data))
 
 
 if __name__ == "__main__":  # Last lines
