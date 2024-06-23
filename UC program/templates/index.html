@@ -96,21 +96,26 @@
                 <div class="full-year" id="full-year"> 
                     <div class="year-info">
                         <div>
-                            <label for="location_">location</label>
-                            <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),surface_ty()" checked>
+                            <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
+                            <label for="location_">Location</label>
                         </div>
                         <div>
-                            <label for="file_">file</label>
-                            <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),surface_ty()">
+                            <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
+                            <label for="file_">csv File</label>
                         </div>
                     </div>
-                    <label for="location">Location:</label>
-                    <select name="location" id="location" class="selection">
-                        <option value="no">-- Select option --</option>        
-                        <option value="1" class="option">Auckland</option>
-                        <option value="2" class="option">Christchurch</option>
-                        <option value="3" class="option">Wellington</option>
-                    </select>
+                    <div id="location">
+                        <label for="location">Location:</label>
+                        <select name="location" id="location_input" class="selection" required>
+                            <option value="">-- Select option --</option>
+                            <option value="1" class="option">Auckland</option>
+                            <option value="2" class="option">Christchurch</option>
+                            <option value="3" class="option">Wellington</option>
+                        </select>
+                    </div>
+                    <div id="csv">
+                        <input id="csv_input" type="file" accept=".csv" class="selection" name="csv_input" method="POST" required>
+                    </div>
                 </div>
                 <button type="submit" class="submit" id="submit">Submit</button>
             </div>
@@ -221,8 +226,27 @@
             }
         }
 
+        function fy_input() {
+            var file = document.getElementById('csv')
+            var location = document.getElementById('location')
+            var file_ = document.getElementById('csv_input')
+            var location_ = document.getElementById('location_input')
+            if (document.getElementById('file_').checked){
+                file.style.display = "grid";
+                location.style.display = "none";
+                file_.setAttribute("required", "required");
+                location_.removeAttribute("required");
+            }
+            else if (document.getElementById('location_').checked) {
+                location.style.display = "grid";
+                file.style.display = "none";
+                location_.setAttribute("required", "required");
+                file_.removeAttribute("required");
+            }
+        }
         surface_ty();
         roof_sy();
+        fy_input();
     </script>
     <script>
         google.charts.load('current',{packages:['corechart']});

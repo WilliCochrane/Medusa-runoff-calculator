@@ -170,7 +170,7 @@ def form_post():
     data = []
     surface = get_surface()[0]
     Type = get_surface()[1]
-    
+    # Single event simulation
     if int(request.form['event']) == 2:
         Area = float(request.form['area'])
         ADD = float(request.form['ADD'])
@@ -186,6 +186,10 @@ def form_post():
         graph = True
         surface = get_surface()[0]
         Type = get_surface()[1]
+        if request.form.get('file_') == 'on':
+            print(request.form.get('csv_input'))
+        else:
+            pass
         graph_data = csv_to_data("static\climate_data\climate_events_2011_CCC.csv", Area, Type, surface)
         return render_template('index.html', roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, graph=graph, single=single, graph_data=json.dumps(graph_data))
 
