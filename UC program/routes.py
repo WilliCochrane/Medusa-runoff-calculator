@@ -1,11 +1,14 @@
 from flask import Flask, request, render_template
+from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor
 import sqlite3
 import csv
 import json
+import os
 
 app = Flask(__name__)
-
+UPLOAD_FOLDER = 'UPLOAD_FOLDER'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER 
 
 def do_sql(sql):
     conn = sqlite3.connect('Coefficients.db')
@@ -15,12 +18,13 @@ def do_sql(sql):
 
 
 def rounded(num, sf):
-    return round(num,sf-int(floor(log10(abs(num))))-1)
+    return round(num, sf-int(floor(log10(abs(num))))-1)
+
 
 def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)))
     sigfig = 5
-    
+
     # TSS Coefficients
     a1 = coeff[0][3]
     a2 = coeff[0][4]
@@ -53,7 +57,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     c7 = coeff[0][30]
     c8 = coeff[0][31]
     h1 = coeff[0][32]
-                
+
     # Other Coefficients
     Z = coeff[0][21]
     k = coeff[0][12]
@@ -98,8 +102,8 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 
         # Calculating DZn roof
         DZn = m1*TZn
-    
-    # Surface 2 is road and 3 is carpark
+
+        # Surface 2 is road and 3 is carpark
     elif surface == 2 or surface == 3:
         # Calculating TSS road/carpark
         if INT < 40:
@@ -129,13 +133,32 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 
 
 def csv_to_data(fileDir, Area, Type, surface):
-    with open(fileDir,newline='') as csvfile:
+    with open(fileDir, newline='') as csvfile:
         graphData = []
         fileReader = csv.reader(csvfile)
         for row in fileReader:
             if row[0].isnumeric():
                 graphData.append([int(row[0]),calculateRunoff(Area,float(row[2]),float(row[3]),float(row[4]),float(row[1]),Type,surface)[0]])
     return graphData
+
+
+def check_file(filepath):
+    with open(filepath, newline='') as csvfile:
+        fileReader = csv.reader(csvfile)
+        try:
+            for row in fileReader:
+                if len(row) < 5 or len(row) > 6:
+                    return False
+                
+                for i in range(len(row)):
+                    print(str(row[i]) + " - " + str(i))
+                    if row[i].isnumeric():
+                        if float(row[i]) <=0:
+                            return False
+            return True
+
+        except:
+            return False
 
 
 def get_surface():
@@ -148,8 +171,8 @@ def get_surface():
     elif request.form.get("carpark_") == "on":
         Type = request.form['carpark_type']
         surface = 3
-    return [surface,Type]
-            
+    return [surface, Type]
+
 
 @app.route('/')
 def form():
@@ -184,13 +207,26 @@ def form_post():
     elif int(request.form['event']) == 1:
         Area = float(request.form['area'])
         graph = True
+        file = "static\climate_data\climate_events_2011_CCC.csv"
         surface = get_surface()[0]
         Type = get_surface()[1]
         if request.form.get('file_') == 'on':
-            print(request.form.get('csv_input'))
+            print("yes")
+            csv = request.files['csv_input']
+            filename = secure_filename(csv.filename)
+            print(filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'],filename)
+            csv.save(filepath)
+            # This would save the file. Now to read simply use the normal way to read files in Python
+            print(filepath)
+            if check_file(filepath):
+                file = filepath
+            else:
+                os.remove(filepath)
+
         else:
-            pass
-        graph_data = csv_to_data("static\climate_data\climate_events_2011_CCC.csv", Area, Type, surface)
+            file = request.form['location']
+        graph_data = csv_to_data(file, Area, Type, surface)
         return render_template('index.html', roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, graph=graph, single=single, graph_data=json.dumps(graph_data))
 
 

@@ -9,7 +9,7 @@
 </head>
 <body>
     {% block content %}
-    <form method="POST">
+    <form action="" method="POST" enctype="multipart/form-data">
         <div>
             <div class="surface">
                 <div>
@@ -97,7 +97,7 @@
                     <div class="year-info">
                         <div>
                             <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
-                            <label for="location_">Location</label>
+                            <label for="location_">Year</label>
                         </div>
                         <div>
                             <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
@@ -105,12 +105,13 @@
                         </div>
                     </div>
                     <div id="location">
-                        <label for="location">Location:</label>
+                        <label for="location">Year:</label>
                         <select name="location" id="location_input" class="selection" required>
                             <option value="">-- Select option --</option>
-                            <option value="1" class="option">Auckland</option>
-                            <option value="2" class="option">Christchurch</option>
-                            <option value="3" class="option">Wellington</option>
+                            <option value="static\climate_data\climate_events_2011_CCC.csv" class="option">2011</option>
+                            <option value="static\climate_data\CCC-2018-climate.csv" class="option">2018</option>
+                            <option value="static\climate_data\CCC-2020-climate.csv" class="option">2020</option>
+                            <option value="static\climate_data\CCC-2021-climate.csv" class="option">2021</option>
                         </select>
                     </div>
                     <div id="csv">
@@ -194,6 +195,9 @@
             var INT = document.getElementById("INTipt");
             var DUR = document.getElementById("DURipt");
             var PH = document.getElementById("PHipt");
+
+            var file_ = document.getElementById('csv_input')
+            var location_ = document.getElementById('location_input')
             if (input == 1){
                 FLInfo.style.display = "block";
                 SEInfo.style.display = "none";
@@ -201,6 +205,7 @@
                 INT.removeAttribute("required");
                 DUR.removeAttribute("required");
                 PH.removeAttribute("required");
+                fy_input();
                 
             }
             else if (input == 2){
@@ -210,6 +215,8 @@
                 INT.setAttribute("required", "required");
                 DUR.setAttribute("required", "required");
                 PH.setAttribute("required", "required");
+                file_.removeAttribute("required");
+                location_.removeAttribute("required");
             }
             else{
                 FLInfo.style.display = "none";
@@ -231,6 +238,7 @@
             var location = document.getElementById('location')
             var file_ = document.getElementById('csv_input')
             var location_ = document.getElementById('location_input')
+
             if (document.getElementById('file_').checked){
                 file.style.display = "grid";
                 location.style.display = "none";
@@ -266,7 +274,7 @@
             // Draw
             const chart = new google.visualization.LineChart(document.getElementById('myChart'));
             chart.draw(data, options);
-        }, 10)
+        }, 50)
         }
         
         drawChart({{ graph_data|safe }});
