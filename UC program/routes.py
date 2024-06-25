@@ -138,7 +138,8 @@ def csv_to_data(fileDir, Area, Type, surface):
         fileReader = csv.reader(csvfile)
         for row in fileReader:
             if row[0].isnumeric():
-                graphData.append([int(row[0]),calculateRunoff(Area,float(row[2]),float(row[3]),float(row[4]),float(row[1]),Type,surface)[0]])
+                runoff = calculateRunoff(Area,float(row[2]),float(row[3]),float(row[4]),float(row[1]),Type,surface)
+                graphData.append([int(row[0]),runoff[0]])
     return graphData
 
 
