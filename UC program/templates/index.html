@@ -293,7 +293,7 @@
         var barColor = "blue";
         function drawChart(graph_data) {
         // Set Data
-        setTimeout(function() {
+        window.onload = function() {
             xValues = graph_data[0]
             yValues = graph_data[1]
             new Chart("TSSChart", {
@@ -362,8 +362,8 @@
                     }
                 }
             });
-        }, 100)
-        }
+        };
+        };
         
         drawChart({{ graph_data|safe }});
     </script>

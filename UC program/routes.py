@@ -160,7 +160,10 @@ def csv_to_data(fileDir, Area, Type, surface):
         for row in fileReader:
             if row[0].isnumeric():
                 runoff = calculateRunoff(Area,float(row[2]),float(row[3]),float(row[4]),float(row[1]),Type,surface)
-                graphData[0].append(row[0])
+                try:
+                    graphData[0].append(row[5])
+                except:
+                    graphData[0].append(row[0])
                 graphData[1].append(runoff[0])
                 graphData[2].append(runoff[1])
                 graphData[3].append(runoff[3])
