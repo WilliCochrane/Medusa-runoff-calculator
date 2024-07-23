@@ -6,8 +6,11 @@ import csv
 import json
 import os
 
+#filedir = "/home/willicochrane/"
+filedir = ""
+
 app = Flask(__name__)
-UPLOAD_FOLDER = 'UPLOAD_FOLDER'
+UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER 
 
 def do_sql(sql):
@@ -21,9 +24,13 @@ def rounded(num, sf):
     return round(num, sf-int(floor(log10(abs(num))))-1)
 
 
+def getConcentration(volume, mass):
+    return volume/mass
+
+
 def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
-    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)))
     sigfig = 5
+    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)))
 
     # TSS Coefficients
     a1 = coeff[0][3]
@@ -64,6 +71,9 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     l1 = coeff[0][23]
     m1 = coeff[0][33]
 
+    # Calculating water volume in litres
+    volume = INT * Area * DUR 
+
     # surface 1 is roof
     if surface == 1:
         # Calculate TSS roof
@@ -81,19 +91,22 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 
         # Calculating TCu roof
         Cu0 = (b1*PH**b2)*(b3*ADD**b4)*(b5*INT**b6)
+        print(Cu0)
         Cuest = b7*PH**b8
-        K = (-log(Cu0/Cuest))/(INT*Z)
+        print(Cuest)
+        K = (-log(Cuest/Cu0))/(INT*Z)
+        print(K)
         if DUR < Z:
-            TCu = Cu0*Area*(1/K)*(1-exp(-K*INT*DUR))
+            TCu = Cu0*Area*(1/1000/K)*(1-exp(-K*INT*DUR))
         elif DUR >= Z:
-            TCu = Cuest*Area*INT*(DUR - Z)+Cu0*Area*(1/K)*(1-exp(-K*INT*Z))
+            TCu = Cuest*Area*INT*(DUR - Z)+Cu0*Area*(1/1000/K)*(1-exp(-K*INT*Z))
 
         # Calculating TZn roof
         Zn0 = (c1*PH+c2)*(c3*ADD**c4)*(c5*INT**c6)
         Znest = c7*PH+c8
         K = (-log(Znest/Zn0))/(INT*Z)
         if DUR <= Z:
-            TZn = Zn0*Area*(1/K)*(1-exp(K*INT*DUR))
+            TZn = Zn0*Area*(1/1000/K)*(1-exp(K*INT*DUR))
         elif DUR > Z:
             TZn = Znest*Area*INT*(DUR-Z)+Zn0*Area*1/1000/K*(1-exp(-K*INT*Z))
 
@@ -123,23 +136,34 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
         # Calculating TZn road/carpark
         DZn = m1*TZn
 
-        TSS *= 1000
-    TSS = rounded(TSS, sigfig)
-    TCu = rounded(TCu, sigfig)
-    TZn = rounded(TZn, sigfig)
-    DCu = rounded(DCu, sigfig)
-    DZn = rounded(DZn, sigfig)
-    return [TSS, TCu, DCu, TZn, DZn]
+        #TSS *= 1000
+
+    CTSS = TSS/volume
+    CTCu = TCu/volume
+    CTZn = TZn/volume
+    CDCu = DCu/volume
+    CDZn = DZn/volume
+    flowRate = volume/DUR/60
+
+    data = [TSS, TZn, DZn, TCu, DCu, volume, flowRate, CTSS, CTZn, CDZn, CTCu, CDCu]
+
+    for i in range(len(data)):
+        data[i] = rounded(data[i], sigfig)
+        
+    return data
 
 
 def csv_to_data(fileDir, Area, Type, surface):
     with open(fileDir, newline='') as csvfile:
-        graphData = []
+        graphData = [[],[],[],[]]
         fileReader = csv.reader(csvfile)
         for row in fileReader:
             if row[0].isnumeric():
                 runoff = calculateRunoff(Area,float(row[2]),float(row[3]),float(row[4]),float(row[1]),Type,surface)
-                graphData.append([int(row[0]),runoff[0]])
+                graphData[0].append(row[0])
+                graphData[1].append(runoff[0])
+                graphData[2].append(runoff[1])
+                graphData[3].append(runoff[3])
     return graphData
 
 
@@ -150,14 +174,11 @@ def check_file(filepath):
             for row in fileReader:
                 if len(row) < 5 or len(row) > 6:
                     return False
-                
                 for i in range(len(row)):
-                    print(str(row[i]) + " - " + str(i))
                     if row[i].isnumeric():
                         if float(row[i]) <=0:
                             return False
             return True
-
         except:
             return False
 
@@ -194,6 +215,7 @@ def form_post():
     data = []
     surface = get_surface()[0]
     Type = get_surface()[1]
+
     # Single event simulation
     if int(request.form['event']) == 2:
         Area = float(request.form['area'])
@@ -203,33 +225,34 @@ def form_post():
         PH = float(request.form['PH'])
         single = True
         data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
-        return render_template('index.html',roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, TSS=data[0], TCu=data[1], DCu=data[2], TZn=data[3], DZn=data[4], single=single, graph=graph)
+        return render_template('index.html',roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, data=data, single=single, graph=graph)
+
     # Full year simulation
     elif int(request.form['event']) == 1:
         Area = float(request.form['area'])
         graph = True
-        file = "static\climate_data\climate_events_2011_CCC.csv"
+        file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
         surface = get_surface()[0]
         Type = get_surface()[1]
         if request.form.get('file_') == 'on':
-            print("yes")
             csv = request.files['csv_input']
             filename = secure_filename(csv.filename)
             print(filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'],filename)
             csv.save(filepath)
-            # This would save the file. Now to read simply use the normal way to read files in Python
             print(filepath)
             if check_file(filepath):
                 file = filepath
             else:
                 os.remove(filepath)
-
         else:
-            file = request.form['location']
+            file = filedir + "static/climate_data/" + request.form['location']
         graph_data = csv_to_data(file, Area, Type, surface)
         return render_template('index.html', roof_type=roof_type, road_type=road_type, carpark_type=carpark_type, graph=graph, single=single, graph_data=json.dumps(graph_data))
-
+"""calculate concentration for each output by dividing the load by the volume of water from the surface. 
+For example, if a user put in 100 m^2 for the surface and the intensity is 0.25 mm/hr and the duration is 4 hours, 
+then the volume of water is 100m^2 * 0.25 mm/hr * 4 hr  / (1000mm per m) = 0.025 m^3 = 25 L. 
+Then you divide the TSS (or TZn or other) by the 25 L to get TSS mg/L"""
 
 if __name__ == "__main__":  # Last lines
     app.run(debug=True)
