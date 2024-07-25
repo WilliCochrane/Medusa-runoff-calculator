@@ -161,8 +161,7 @@ def csv_to_data(fileDir, Area, Type, surface):
         for row in fileReader:
             if row[0].isnumeric():
                 runoff = calculateRunoff(Area, float(row[2]), float(row[3]),
-                                         float(row[4]), float(row[1]), Type,
-                                         surface)
+                                         float(row[4]), float(row[1]), Type, surface)
                 try:
                     graphData[0].append(row[5])
                 except:
@@ -271,8 +270,13 @@ def Login():
 
 @app.route('/Login', methods=['POST'])
 def Login_Post():
-    
-    return render_template('Login.html')
+    username = get
+    return render_template('index.html')
+
+
+@app.errorhandler(404)
+def Page_Not_Found(error):
+    return render_template('404page.html')
 
 
 if __name__ == "__main__":  # Last lines
