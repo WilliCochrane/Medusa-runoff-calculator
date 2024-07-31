@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, session
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor
 import sqlite3
@@ -12,12 +12,16 @@ filedir = ""
 app = Flask(__name__)
 UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
 
 
-def do_sql(sql):
+def do_sql(sql, values):
     conn = sqlite3.connect('Coefficients.db')
     cur = conn.cursor()
-    cur.execute(sql)
+    if values != None:
+        cur.execute(sql, values)
+    else:
+        cur.execute(sql)
     return cur.fetchall()
 
 
@@ -31,8 +35,8 @@ def getConcentration(volume, mass):
 
 def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     sigfig = 5
-    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)))
-
+    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)), None)
+    # The variables below were named like that in the fomulas I was provided
     # TSS Coefficients
     a1 = coeff[0][3]
     a2 = coeff[0][4]
@@ -92,11 +96,8 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 
         # Calculating TCu roof
         Cu0 = (b1*PH**b2)*(b3*ADD**b4)*(b5*INT**b6)
-        print(Cu0)
         Cuest = b7*PH**b8
-        print(Cuest)
         K = (-log(Cuest/Cu0))/(INT*Z)
-        print(K)
         if DUR < Z:
             TCu = Cu0*Area*(1/1000/K)*(1-exp(-K*INT*DUR))
         elif DUR >= Z:
@@ -146,8 +147,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     CDZn = DZn/volume
     flowRate = volume/DUR/60
 
-    data = [TSS, TZn, DZn, TCu, DCu, volume, flowRate, CTSS, CTZn, CDZn, CTCu,
-            CDCu]
+    data = [TSS, TZn, DZn, TCu, DCu, volume, flowRate, CTSS, CTZn, CDZn, CTCu, CDCu]
 
     for i in range(len(data)):
         data[i] = rounded(data[i], sigfig)
@@ -201,21 +201,32 @@ def get_surface():
     return [surface, Type]
 
 
+def get_user_data(username):
+    userFiles = do_sql('''SELECT * FROM File_data Where File_data.id = User_File_data.File_data_id AND
+                       User_File_data.User_id = User.id And User.username = {}'''.format(username), None) 
+    print(userFiles)
+    return userFiles
+
+
 @app.route('/')
-def form():
-    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1")
-    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2")
-    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3")
+def Home_Page():
+    return render_template('Home.html')
+
+@app.route('/Calculator')
+def Calc_Form():
+    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
+    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
+    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
     return render_template('index.html', roof_type=roof_type,
                            road_type=road_type,
                            carpark_type=carpark_type)
 
 
-@app.route('/', methods=['POST'])
-def form_post():
-    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1")
-    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2")
-    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3")
+@app.route('/Calculator', methods=['POST'])
+def Calc_Form_Post():
+    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
+    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
+    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
 
     graph = False
     single = False
@@ -246,10 +257,8 @@ def form_post():
         if request.form.get('file_') == 'on':
             csv = request.files['csv_input']
             filename = secure_filename(csv.filename)
-            print(filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             csv.save(filepath)
-            print(filepath)
             if check_file(filepath):
                 file = filepath
             else:
@@ -270,11 +279,37 @@ def Login():
 
 @app.route('/Login', methods=['POST'])
 def Login_Post():
-    username = get
-    return render_template('index.html')
+    session['username'] = request.form['username']
+    return render_template('Login.html')
 
 
-@app.errorhandler(404)
+@app.route('/SignUp')
+def Sign_Up():
+    return render_template('SignUp.html')
+
+
+@app.route('/SignUp', methods=['POST'])
+def Sign_Up_Post():
+    username = request.form['username']
+    password = request.form['password']
+    redoPassword = request.form['redoPassword']
+    email = request.form['email']
+
+    print(username,password,redoPassword,email)
+
+    if redoPassword != password:
+        return render_template('SignUp.html', passwordDontMatch = True)
+
+    unavalableUsernames = do_sql('SELECT username FROM User;', None)
+    for name in unavalableUsernames[0]:
+        if username == name:
+            return render_template('SignUp.html', unavalableUsername = True)
+    
+    do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);',(username, password, email))
+    return render_template('SignUp.html')
+
+
+@app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
     return render_template('404page.html')
 
