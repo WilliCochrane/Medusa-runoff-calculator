@@ -16,10 +16,11 @@ app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
 
 
 def do_sql(sql, values):
-    conn = sqlite3.connect('Coefficients.db')
-    cur = conn.cursor()
+    db = sqlite3.connect('Coefficients.db')
+    cur = db.cursor()
     if values != None:
         cur.execute(sql, values)
+        db.commit()
     else:
         cur.execute(sql)
     return cur.fetchall()
@@ -295,17 +296,19 @@ def Sign_Up_Post():
     redoPassword = request.form['redoPassword']
     email = request.form['email']
 
-    print(username,password,redoPassword,email)
+    print(username, password, redoPassword, email)
 
     if redoPassword != password:
-        return render_template('SignUp.html', passwordDontMatch = True)
+        print("non matching passwords")
+        return render_template('SignUp.html', passwordDontMatch=True)
 
     unavalableUsernames = do_sql('SELECT username FROM User;', None)
-    for name in unavalableUsernames[0]:
-        if username == name:
-            return render_template('SignUp.html', unavalableUsername = True)
+    for name in unavalableUsernames:
+        if username == name[0]:
+            print("unavalable username")
+            return render_template('SignUp.html', unavalableUsername=True)
     
-    do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);',(username, password, email))
+    do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
     return render_template('SignUp.html')
 
 
