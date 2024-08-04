@@ -286,7 +286,7 @@ def Login_Post():
 
 @app.route('/SignUp')
 def Sign_Up():
-    return render_template('SignUp.html')
+    return render_template('SignUp.html', error=False)
 
 
 @app.route('/SignUp', methods=['POST'])
@@ -296,20 +296,18 @@ def Sign_Up_Post():
     redoPassword = request.form['redoPassword']
     email = request.form['email']
 
-    print(username, password, redoPassword, email)
-
     if redoPassword != password:
         print("non matching passwords")
-        return render_template('SignUp.html', passwordDontMatch=True)
+        return render_template('SignUp.html', error=True, error_message="Passwords do not match")
 
     unavalableUsernames = do_sql('SELECT username FROM User;', None)
     for name in unavalableUsernames:
         if username == name[0]:
             print("unavalable username")
-            return render_template('SignUp.html', unavalableUsername=True)
-    
+            return render_template('SignUp.html', error=True, error_message="unavalable username")
+    print(username, password, redoPassword, email)
     do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
-    return render_template('SignUp.html')
+    return render_template('SignUp.html', error=False)
 
 
 @app.errorhandler(404)  # 404 page

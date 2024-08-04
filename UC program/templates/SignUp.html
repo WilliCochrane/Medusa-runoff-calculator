@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
     <title>Runoff Calculator</title>
 </head>
 <body>
     <form action="" method="POST" enctype="multipart/form-data">
-        <p>username</p>
-        <input type="text" id="SignUp-username" name="username" required>
-        <p>email</p>
-        <input type="email" id="SignUp-email"  name="email" required>
-        <p>password</p>
-        <input type="password" id="SignUp-password"  name="password" required>
-        <p>redoPassword</p>
-        <input type="password" id="SignUp-redoPassword" name="redoPassword" required>
-        <input type="submit">
+        <div class="sign-up-content" {% if error %} style="border: 3px solid red;"{% endif %}>
+            <div class="error-message">{{ error_message }}</div>
+            <b>Username</b><br>
+            <input type="text" id="SignUp-username" name="username" class="sign-up-input" placeholder="Username" required><br><br>
+            <b>Email</b><br>
+            <input type="email" id="SignUp-email"  name="email" class="sign-up-input" placeholder="123@gmail.com" required><br><br>
+            <b>Password</b><br>
+            <input type="password" id="SignUp-password"  name="password" class="sign-up-input" placeholder="Password" required><br><br>
+            <b>Repeat password</b><br>
+            <input type="password" id="SignUp-redoPassword" name="redoPassword" class="sign-up-input" placeholder="Password" required><br><br>
+            <input type="submit">
+        </div>
     </form>
 </body>
 </html>
