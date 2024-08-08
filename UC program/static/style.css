@@ -155,8 +155,9 @@ sup {
   height: 300px;
   padding: 30px;
   margin: auto;
-  background-color: #2196F3;
+  background-color: #dddddd;
   border-radius: 10px;
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.2), 0 4px 10px 0 rgba(0, 0, 0, 0.19);
 }
 
 .sign-up-input {
@@ -165,3 +166,40 @@ sup {
   border-radius: 7px;
   border: 1px solid black;
 }
+
+.nav-bar {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr 1fr 1fr 3fr;
+  background-color: #eee;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: fit-content;
+  gap: .2%;
+  position: fixed;
+  padding: 5px;
+  z-index: 2;
+  border-radius: ;
+}
+
+.nav-bar-cell {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  justify-content: center;
+  padding: 20px 30px;
+  text-wrap: nowrap;
+  color: black;
+  border-radius: 5px;
+  font-style: normal;
+  text-decoration: none;
+  transition: all 200ms;
+  
+}
+.nav-bar-cell:hover {
+  background-color: rgb(175, 175, 175);
+  color: rgb(29, 29, 29);
+  border-radius: 10px;
+  text-decoration: underline;
+}
+
