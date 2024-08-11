@@ -1,14 +1,223 @@
-body {
-    font-family: Arial;
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  background-color: #24252A;
+  color: #edf0f1;
+  font-family: "Montserrat", sans-serif;
+}
+
+form {
+  width: 100%;
 }
 
 b {
   font-size: 15px;
 }
 
+h1 {
+  font-weight: 800;
+}
+
+h2 {
+  font-weight: 400;
+}
+
+p {
+  font-optical-sizing: auto;
+  font-weight: 200;
+  text-decoration: none;
+}
+
+li, a, button{
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 10%;
+}
+
 sup {
   height: 0;
   font-size: 5px 0 0;
+}
+
+.logo {
+  cursor: pointer;
+}
+
+.nav-links {
+  list-style: none;
+}
+
+.nav-links li{
+  display: inline-block;
+  padding: 0 20px;
+}
+
+.nav-links li a {
+  position: relative;
+  transition: all 0.3s ease 0s;
+}
+
+.nav-links li a:hover {
+  color: #0088a9;
+}
+
+.nav-links a::before {
+  content: '';
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  position: absolute;
+  top: 20px;
+  width: 0%;
+  background-color: #edf0f1;
+  transition: all ease-in-out 0.3s;
+}
+
+.nav-links a:hover::before {
+  width: 100%;
+  background-color: #0088a9;
+}
+
+button {
+  padding: 9px 25px;
+  background-color: rgba(0,136,169,1);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease 0s;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+button:hover {
+  background-color: rgba(0,136,169,0.8);
+}
+
+.flex-align {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 75vh;
+}
+
+.wrapper {
+  width: 420px;
+  margin: auto;
+  border-radius: 10px;
+  padding: 30px 40px;
+  border: 2px solid rgba(237, 240, 241, 0.2);
+}
+
+.wrapper h1{
+  text-align: center;
+  font-size: 36px;
+}
+
+.wrapper .input-box {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  margin: 30px 0;
+}
+
+.input-box input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  border: 2px solid rgba(237, 240, 241, 0.2);
+  border-radius: 40px;
+  font-size: 16px;
+  padding: 20px 45px 20px 20px;
+}
+
+.input-box input::placeholder {
+  color: #edf0f1;
+}
+
+.input-box i {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+}
+
+.input-box p {
+  position: absolute;
+  font-weight: 200;
+  transform: translateY(-50%);
+  top: 50%;
+  left: 20px;
+  transition: all ease 0.3s;
+  pointer-events: none;
+  color: rgba(237, 240, 241, 0.9);
+}
+
+.input-box input:focus + p {
+  font-weight: 400;
+  color: rgba(237, 240, 241, 1);
+  caret-color: transparent;
+}
+
+.input-box input:valid + p {
+  font-size: 10px;
+  top: 0;
+  font-weight: 600;
+  color: rgba(237, 240, 241, 1);
+}
+
+.input-box input:invalid {
+  caret-color: transparent;
+}
+
+.wrapper .remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14.5px;
+  margin: -15px 0 15px; 
+}
+
+.wrapper .login-submit {
+  width: 100%;
+  height: 45px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+}
+
+.wrapper .register-link {
+  font-size: 14.5px;
+  text-align: center;
+  margin: 20px 0 15px;
+}
+.register-link p a {
+  font-weight: 600;
+}
+
+.register-link p a:hover {
+  text-decoration: underline;
+}
+
+.remember-forgot label input {
+  accent-color: #edf0f1;
+  margin-right: 3px;
+}
+
+.remember-forgot a:hover {
+  text-decoration: underline;
 }
 
 .content-grid {
@@ -167,39 +376,20 @@ sup {
   border: 1px solid black;
 }
 
-.nav-bar {
-  display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr 1fr 3fr;
-  background-color: #eee;
-  top: 0;
-  right: 0;
-  width: 100%;
-  height: fit-content;
-  gap: .2%;
-  position: fixed;
-  padding: 5px;
-  z-index: 2;
-  border-radius: ;
-}
-
-.nav-bar-cell {
-  font-size: 20px;
-  font-weight: bold;
-  text-align: center;
-  justify-content: center;
-  padding: 20px 30px;
-  text-wrap: nowrap;
-  color: black;
-  border-radius: 5px;
-  font-style: normal;
-  text-decoration: none;
-  transition: all 200ms;
-  
-}
-.nav-bar-cell:hover {
-  background-color: rgb(175, 175, 175);
-  color: rgb(29, 29, 29);
-  border-radius: 10px;
+.info-link {
   text-decoration: underline;
+  font-weight: 400;
+  color: rgba(0,136,169,1);
+  transition: all ease 0.3s;
 }
 
+.info-link:hover {
+  font-weight: 400;
+  color: rgba(0,136,169,.8);
+}
+
+.home-info-text {
+  width: 70%;
+  height: fit-content;
+  margin: auto;
+}

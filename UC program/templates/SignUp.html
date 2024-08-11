@@ -4,22 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <title>MEDUSA 2.0</title>
 </head>
 <body>
-    <form action="" method="POST" enctype="multipart/form-data">
-        <div class="sign-up-content" {% if error %} style="border: 3px solid red;"{% endif %}>
-            <div class="error-message">{{ error_message }}</div>
-            <b>Username</b><br>
-            <input type="text" id="SignUp-username" name="username" class="sign-up-input" placeholder="Username" required><br><br>
-            <b>Email</b><br>
-            <input type="email" id="SignUp-email"  name="email" class="sign-up-input" placeholder="123@gmail.com" required><br><br>
-            <b>Password</b><br>
-            <input type="password" id="SignUp-password"  name="password" class="sign-up-input" placeholder="Password" required><br><br>
-            <b>Repeat password</b><br>
-            <input type="password" id="SignUp-redoPassword" name="redoPassword" class="sign-up-input" placeholder="Password" required><br><br>
-            <input type="submit">
+    <header>
+        <img class="logo" scr="static/Image/Placeholder.png">
+        <nav>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/Calculator">Multi Event Simulation</a></li>
+                <li><a href="/Calculator">Single Event Simulation</a></li>
+            </ul>
+        </nav>
+        <a class="login" href="/Login"><button>Login</button></a>
+    </header>
+    <div class="flex-align">
+        <div class="wrapper">
+            <form action="" method="POST" enctype="multipart/form-data">
+                <h1>Sign Up</h1>
+                <div class="input-box">
+                    <input type="text" id="SignUp-username" 
+                    name="username" required>
+                    <p>Username</p>
+                    <i class='bx bxs-user'></i>
+                </div>
+                <div class="input-box">
+                    <input type="text" id="SignUp-email" name="email"
+                    name="email" required>
+                    <p>Email</p>
+                    <i class='bx bx-envelope' ></i>
+                </div>
+                <div class="input-box">
+                    <input type="password" id="SignUp-password" 
+                    name="password" required>
+                    <p>Password</p>
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+                <div class="input-box">
+                    <input type="password" id="SignUp-redoPassword" 
+                    name="redoPassword" required>
+                    <p>Password again</p>
+                    <i class='bx bxs-lock-alt'></i>
+                </div>
+                
+                <div class="remember-forgot">
+                    <label>
+                        By clicking regester, you agree to our
+                        <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+                <button type="submit" class="login-submit">Register</button>
+
+                <div class="register-link">
+                    <p>Already have an account? 
+                    <a href="/Login">Login here</a></p>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </body>
 </html>

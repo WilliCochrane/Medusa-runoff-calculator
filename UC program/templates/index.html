@@ -9,6 +9,17 @@
 </head>
 <body>
     {% block content %}
+    <header>
+        <img class="logo" scr="static\Image\Placeholder.png">
+        <nav>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/Calculator">Multi Event Simulation</a></li>
+                <li><a href="/Calculator">Single Event Simulation</a></li>
+            </ul>
+        </nav>
+        <a class="login" href="/Login"><button>Login</button></a>
+    </header>
     <form action="" method="POST" enctype="multipart/form-data">
         <div>
             <div class="surface">
@@ -37,7 +48,7 @@
                         <input type="number" class="num" id="area" name="area" min="1" step=".00000001" required> m<sup>2</sup>
                     </div>
 
-                    <label for="type">Material type:</label>
+                    <label>Material type:</label>
 
                     <div id="roof">
                         <select name="roof_type" id="roof_type" class="selection" method="POST" required>
@@ -111,7 +122,7 @@
                         </div>
                     </div>
                     <div id="location">
-                        <label for="location">Year:</label>
+                        <label>Year:</label>
                         <select name="location" id="location_input" class="selection" required>
                             <option value="">-- Select option --</option>
                             <option value="climate_events_2011_CCC.csv" class="option">2011</option>
@@ -291,7 +302,7 @@
     </script>
 
     <script>
-        var barColor = "blue";
+        var barColor = "#2196F3";
         function drawChart(graph_data) {
         // Set Data
         window.onload = function() {
@@ -365,8 +376,9 @@
             });
         };
         };
-        
+        {% if graph %}
         drawChart({{ graph_data|safe }});
+        {% endif %}
     </script>
     {% endblock %}
 </body>
