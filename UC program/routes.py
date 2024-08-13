@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, session
+from flask import Flask, request, render_template, session, redirect, url_for
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor
 import sqlite3
@@ -296,23 +296,24 @@ def Sign_Up_Post():
     redoPassword = request.form['redoPassword']
     email = request.form['email']
 
-    if redoPassword != password:
-        print("non matching passwords")
-        return render_template('SignUp.html', error=True, error_message="Passwords do not match")
-
     unavalableUsernames = do_sql('SELECT username FROM User;', None)
     for name in unavalableUsernames:
         if username == name[0]:
             print("unavalable username")
-            return render_template('SignUp.html', error=True, error_message="unavalable username")
+            return render_template('SignUp.html', error=True, username_error=True, error_message="Unavalable username")
+
+    if redoPassword != password:
+        print("non matching passwords")
+        return render_template('SignUp.html', error=True, password_error=True, error_message="Passwords do not match")
+    
     print(username, password, redoPassword, email)
     do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
-    return render_template('SignUp.html', error=False)
+    return redirect(url_for('Home_Page'))
 
 
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
-    return render_template('404page.html')
+    return render_template()
 
 
 if __name__ == "__main__":  # Last lines

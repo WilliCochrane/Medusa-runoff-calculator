@@ -51,6 +51,10 @@ sup {
   font-size: 5px 0 0;
 }
 
+.flex-align {
+  background-color: transparent;
+}
+
 .logo {
   cursor: pointer;
 }
@@ -142,6 +146,7 @@ button:hover {
   border-radius: 40px;
   font-size: 16px;
   padding: 20px 45px 20px 20px;
+  transition: border-color ease 0.3s;
 }
 
 .input-box input::placeholder {
@@ -167,10 +172,23 @@ button:hover {
   color: rgba(237, 240, 241, 0.9);
 }
 
+.input-box input:focus {
+  border-color: rgba(237, 240, 241, .8);
+}
+
 .input-box input:focus + p {
-  font-weight: 400;
+  font-weight: 500;
   color: rgba(237, 240, 241, 1);
   caret-color: transparent;
+}
+.input-box input:-webkit-autofill,
+.input-boxinput:-webkit-autofill:hover,
+.input-boxinput:-webkit-autofill:focus,
+.input-boxinput:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: #fdfdfd;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 20px 20px #24252A;
 }
 
 .input-box input:valid + p {
@@ -392,4 +410,11 @@ button:hover {
   width: 70%;
   height: fit-content;
   margin: auto;
+}
+
+.error {
+  color: red;
+  margin: auto;
+  font-weight: 400;
+  text-decoration: underline;
 }

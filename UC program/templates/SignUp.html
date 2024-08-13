@@ -20,22 +20,22 @@
         <a class="login" href="/Login"><button>Login</button></a>
     </header>
     <div class="flex-align">
-        <div class="wrapper">
+        <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .8);"{% endif %}>
             <form action="" method="POST" enctype="multipart/form-data">
                 <h1>Sign Up</h1>
-                <div class="input-box">
+                <div class="input-box" {% if username_error %} style="border-color: rgba(255, 0, 0, .8);"{% endif %}>
                     <input type="text" id="SignUp-username" 
                     name="username" required>
                     <p>Username</p>
                     <i class='bx bxs-user'></i>
                 </div>
-                <div class="input-box">
+                <div class="input-box" {% if email_error %} style="border-color: rgba(255, 0, 0, .8)red;"{% endif %}>
                     <input type="text" id="SignUp-email" name="email"
                     name="email" required>
                     <p>Email</p>
                     <i class='bx bx-envelope' ></i>
                 </div>
-                <div class="input-box">
+                <div class="input-box" {% if password_error %} style="border-color: rgba(255, 0, 0, .8);"{% endif %}>
                     <input type="password" id="SignUp-password" 
                     name="password" required>
                     <p>Password</p>
@@ -47,15 +47,16 @@
                     <p>Password again</p>
                     <i class='bx bxs-lock-alt'></i>
                 </div>
+                <p class="error">{{ error_message }}</p><br>
                 
                 <div class="remember-forgot">
                     <label>
-                        By clicking regester, you agree to our
+                        <p>By clicking register, you agree to our</p>
                         <a href="#">Privacy Policy</a>
                     </label>
                 </div>
                 <button type="submit" class="login-submit">Register</button>
-
+                
                 <div class="register-link">
                     <p>Already have an account? 
                     <a href="/Login">Login here</a></p>
