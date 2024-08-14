@@ -158,6 +158,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 def csv_to_data(fileDir, Area, Type, surface):
     with open(fileDir, newline='') as csvfile:
         graphData = [[], [], [], []]
+        outputData = []
         fileReader = csv.reader(csvfile)
         for row in fileReader:
             if row[0].isnumeric():
@@ -165,12 +166,15 @@ def csv_to_data(fileDir, Area, Type, surface):
                                          float(row[4]), float(row[1]), Type, surface)
                 try:
                     graphData[0].append(row[5])
+                    outputData.append([row[5], runoff])
                 except:
                     graphData[0].append(row[0])
+                    outputData.append([row[0], runoff])
                 graphData[1].append(runoff[0])
                 graphData[2].append(runoff[1])
                 graphData[3].append(runoff[3])
-    return graphData
+                
+    return [graphData, outputData]
 
 
 def check_file(filepath):
@@ -187,6 +191,16 @@ def check_file(filepath):
             return True
         except:
             return False
+
+
+def data_to_csv(filepath, username, data):
+    with open(filepath + username, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        field = ["Event", ""]
+        for i in data:
+            row = 
+            writer.writerows(i)
+    return filepath + username
 
 
 def get_surface():
@@ -209,9 +223,20 @@ def get_user_data(username):
     return userFiles
 
 
+def check_email(email):
+    has_at = False
+    for i in email:
+        if i == "@":
+            has_at = True
+        elif i == "." and has_at:
+            return True
+    return False
+
+
 @app.route('/')
 def Home_Page():
     return render_template('Home.html')
+
 
 @app.route('/Calculator')
 def Calc_Form():
@@ -255,6 +280,8 @@ def Calc_Form_Post():
         file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
         surface = get_surface()[0]
         Type = get_surface()[1]
+        username = session['username']
+
         if request.form.get('file_') == 'on':
             csv = request.files['csv_input']
             filename = secure_filename(csv.filename)
@@ -266,7 +293,13 @@ def Calc_Form_Post():
                 os.remove(filepath)
         else:
             file = filedir + "static/climate_data/" + request.form['location']
-        graph_data = csv_to_data(file, Area, Type, surface)
+        
+        data = csv_to_data(file, Area, Type, surface)
+
+        graph_data = data[0]
+
+        output_data = data_to_csv("Output/", username, data[1])        
+
         return render_template('index.html', roof_type=roof_type,
                                road_type=road_type, carpark_type=carpark_type,
                                graph=graph, single=single,
@@ -302,10 +335,15 @@ def Sign_Up_Post():
             print("unavalable username")
             return render_template('SignUp.html', error=True, username_error=True, error_message="Unavalable username")
 
+    if not check_email(email):
+        print("Invalid email address")
+        return render_template('SignUp.html', error=True, email_error=True, error_message="Invalid email address")
+
     if redoPassword != password:
         print("non matching passwords")
         return render_template('SignUp.html', error=True, password_error=True, error_message="Passwords do not match")
     
+
     print(username, password, redoPassword, email)
     do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
     return redirect(url_for('Home_Page'))
@@ -313,7 +351,7 @@ def Sign_Up_Post():
 
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
-    return render_template()
+    return render_template('404page.html')
 
 
 if __name__ == "__main__":  # Last lines
