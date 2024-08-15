@@ -104,7 +104,7 @@
                         <input type="number" class="num" id="DURipt" name="DUR" min="0" step=".00000001" required> h
                     </div>
 
-                    <div class="centre">PH:</div>
+                    <div class="centre">pH:</div>
                     <div>
                      <input type="number" class="num" id="PHipt" name="PH" min="0" step=".00000001" required>
                     </div>
@@ -141,10 +141,26 @@
             </div>
         </div>
     </form>
+    
     {% if single %}
         <div class="output">
-
-            <div class="output-container" id="road-output">
+            <div class="output-container">
+                <h1>Input</h1><h1></h1>
+                <div class="info-prompt">Surface:</div> 
+                <div class="info">{{ input_data[0] }}</div>
+                <div class="info-prompt">Area:</div> 
+                <div class="info">{{ input_data[1] }} m<sup>2</sup></div>
+                <div class="info-prompt">Material:</div> 
+                <div class="info">{{ input_data[2] }}</div>
+                <div class="info-prompt">ADD:</div> 
+                <div class="info">{{ input_data[3] }} days</div>
+                <div class="info-prompt">INT:</div> 
+                <div class="info">{{ input_data[4] }} mm/h</div>
+                <div class="info-prompt">DUR:</div> 
+                <div class="info">{{ input_data[5] }} h</div>
+                <div class="info-prompt">pH:</div> 
+                <div class="info">{{ input_data[6] }}</div>
+                <h1>Output</h1><h1></h1>
                 <div class="info-prompt">TSS:</div> 
                 <div class="info" id="TSS">{{ data[0] }} mg</div>
                 <div class="info-prompt">TZn:</div> 
@@ -174,6 +190,17 @@
             <br>
             {% endif %}
             {% if graph %}
+                <h1>Input</h1>
+                <b>Surface:</b>
+                <p>{{ input_data[0] }}</p>
+                <b>Area:</b>
+                <p>{{ input_data[1] }}</p>
+                <b>Material:</b>
+                <p>{{ input_data[2] }}</p>
+                <h1>Output</h1>
+                <a href="{{ output_file }}" download class="output-file">
+                    <button>Download data</button>
+                </a><br>
                 <h3>TSS</h3>
                 <canvas id="TSSChart" style="width:100%;max-width:600px"></canvas>
                 <h3>TZn</h3>

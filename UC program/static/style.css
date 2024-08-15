@@ -418,3 +418,8 @@ button:hover {
   font-weight: 400;
   text-decoration: underline;
 }
+
+.output-file {
+  text-decoration: underline;
+  color: #2196F3;
+}

@@ -5,11 +5,12 @@ import sqlite3
 import csv
 import json
 import os
+import random
 
-# filedir = "/home/willicochrane/"
+#filedir = "/home/willicochrane/"
 filedir = ""
 
-app = Flask(__name__)
+app = Flask(__name__,static_folder=filedir+"static")
 UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
@@ -35,9 +36,8 @@ def getConcentration(volume, mass):
 
 
 def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
-    sigfig = 5
     coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)), None)
-    # The variables below were named like that in the fomulas I was provided
+    # The variables below are named like that in the fomulas I was provided
     # TSS Coefficients
     a1 = coeff[0][3]
     a2 = coeff[0][4]
@@ -49,7 +49,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     a8 = coeff[0][10]
     a9 = coeff[0][11]
 
-    # Total Cu Coefficients
+    # Cu Coefficients
     b1 = coeff[0][13]
     b2 = coeff[0][14]
     b3 = coeff[0][15]
@@ -60,7 +60,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     b8 = coeff[0][20]
     g1 = coeff[0][22]
 
-    # Total Zn Coefficients
+    # Zn Coefficients
     c1 = coeff[0][24]
     c2 = coeff[0][25]
     c3 = coeff[0][26]
@@ -149,7 +149,8 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     flowRate = volume/DUR/60
 
     data = [TSS, TZn, DZn, TCu, DCu, volume, flowRate, CTSS, CTZn, CDZn, CTCu, CDCu]
-
+    sigfig = 5
+    
     for i in range(len(data)):
         data[i] = rounded(data[i], sigfig)
     return data
@@ -194,13 +195,21 @@ def check_file(filepath):
 
 
 def data_to_csv(filepath, username, data):
-    with open(filepath + username, 'w', newline='') as csvfile:
+    path = filedir + filepath + username + ".csv"
+    try:
+        os.remove(path)
+    except:
+        print("no file")
+
+    with open(path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        field = ["Event", ""]
+        field = ['Event', 'TSS (mg)', 'TZn (mg)', 'DZn (mg)', 'TCu (mg)', 'DCu (mg)', 'Volume (l)', 'Flow rate (l/min)', 
+                 'Conc. TSS (mg/l)', 'Conc. TZn (mg/l)', 'Conc. DZn (mg/l)', 'Conc. TCu (mg/l)', 'Conc. DCu (mg/l)']
+        writer.writerow(field)
         for i in data:
-            row = 
-            writer.writerows(i)
-    return filepath + username
+            row = i[1]
+            row.insert(0, i[0])
+            writer.writerow(row)
 
 
 def get_surface():
@@ -253,34 +262,40 @@ def Calc_Form_Post():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-
+    Area = float(request.form['area'])
     graph = False
     single = False
     data = []
     surface = get_surface()[0]
     Type = get_surface()[1]
 
+    surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
+                            Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
+
     # Single event simulation
     if int(request.form['event']) == 2:
-        Area = float(request.form['area'])
         ADD = float(request.form['ADD'])
         INT = float(request.form['INT'])
         DUR = float(request.form['DUR'])
         PH = float(request.form['PH'])
         single = True
         data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
-        return render_template('index.html', roof_type=roof_type,
-                               road_type=road_type, carpark_type=carpark_type,
+        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
+
+        return render_template('index.html', roof_type=roof_type, road_type=road_type, 
+                               carpark_type=carpark_type, input_data=input_data,
                                data=data, single=single, graph=graph)
 
     # Full year simulation
     elif int(request.form['event']) == 1:
-        Area = float(request.form['area'])
         graph = True
         file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
         surface = get_surface()[0]
         Type = get_surface()[1]
-        username = session['username']
+        try:
+            username = session['username']
+        except:
+            username = str(random.randint(100000000,999999999))
 
         if request.form.get('file_') == 'on':
             csv = request.files['csv_input']
@@ -295,14 +310,14 @@ def Calc_Form_Post():
             file = filedir + "static/climate_data/" + request.form['location']
         
         data = csv_to_data(file, Area, Type, surface)
-
+        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
         graph_data = data[0]
 
-        output_data = data_to_csv("Output/", username, data[1])        
-
-        return render_template('index.html', roof_type=roof_type,
-                               road_type=road_type, carpark_type=carpark_type,
-                               graph=graph, single=single,
+        data_to_csv("static/output/", username, data[1])
+        output_data = "/static/output/" + username + ".csv"
+        return render_template('index.html', roof_type=roof_type, road_type=road_type, 
+                               carpark_type=carpark_type, input_data=input_data,
+                               graph=graph, single=single, output_file=output_data,
                                graph_data=json.dumps(graph_data))
 
 
