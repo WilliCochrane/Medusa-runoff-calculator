@@ -413,10 +413,9 @@ button:hover {
 }
 
 .error {
-  color: red;
+  color: rgb(255, 0, 0);
   margin: auto;
-  font-weight: 400;
-  text-decoration: underline;
+  font-weight: 600;
 }
 
 .output-file {

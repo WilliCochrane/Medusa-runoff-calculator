@@ -328,8 +328,15 @@ def Login():
 
 @app.route('/Login', methods=['POST'])
 def Login_Post():
-    session['username'] = request.form['username']
-    return render_template('Login.html')
+    username = request.form['username']
+    password = request.form['password']
+    users = do_sql('SELECT * FROM User', None)
+    for user in users:
+        print(user[1]+user[2])
+        if str(username) == str(user[1]) and str(password) == str(user[2]):
+            session['username'] = username
+            return  redirect(url_for('Home_Page'))
+    return render_template('Login.html', error=True)
 
 
 @app.route('/SignUp')

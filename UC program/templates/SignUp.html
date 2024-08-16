@@ -20,22 +20,22 @@
         <a class="login" href="/Login"><button>Login</button></a>
     </header>
     <div class="flex-align">
-        <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .8);"{% endif %}>
+        <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
             <form action="" method="POST" enctype="multipart/form-data">
                 <h1>Sign Up</h1>
-                <div class="input-box" {% if username_error %} style="border-color: rgba(255, 0, 0, .8);"{% endif %}>
+                <div class="input-box" {% if username_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
                     <input type="text" id="SignUp-username" 
                     name="username" required>
                     <p>Username</p>
                     <i class='bx bxs-user'></i>
                 </div>
-                <div class="input-box" {% if email_error %} style="border-color: rgba(255, 0, 0, .8)red;"{% endif %}>
+                <div class="input-box" {% if email_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
                     <input type="text" id="SignUp-email" name="email"
                     name="email" required>
                     <p>Email</p>
                     <i class='bx bx-envelope' ></i>
                 </div>
-                <div class="input-box" {% if password_error %} style="border-color: rgba(255, 0, 0, .8);"{% endif %}>
+                <div class="input-box" {% if password_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
                     <input type="password" id="SignUp-password" 
                     name="password" required>
                     <p>Password</p>

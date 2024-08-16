@@ -20,9 +20,10 @@
         <a class="login" href="/Login"><button>Login</button></a>
     </header>
     <div class="flex-align">
-        <div class="wrapper">
+        <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
             <form action="" method="POST" enctype="multipart/form-data">
-                <h1>Login</h1>
+                <h1>Login</h1><br>
+                {% if error %}<p class="error">Username or password is incorrect</p>{% endif %}
                 <div class="input-box">
                     <input type="text" id="Login-username" 
                     name="username" required>
