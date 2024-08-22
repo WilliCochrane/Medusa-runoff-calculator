@@ -140,17 +140,14 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
         DZn = m1*TZn
 
         # TSS *= 1000
-
     CTSS = TSS/volume
     CTCu = TCu/volume
     CTZn = TZn/volume
     CDCu = DCu/volume
     CDZn = DZn/volume
     flowRate = volume/DUR/60
-
     data = [TSS, TZn, DZn, TCu, DCu, volume, flowRate, CTSS, CTZn, CDZn, CTCu, CDCu]
     sigfig = 5
-    
     for i in range(len(data)):
         data[i] = rounded(data[i], sigfig)
     return data
@@ -174,7 +171,7 @@ def csv_to_data(fileDir, Area, Type, surface):
                 graphData[1].append(runoff[0])
                 graphData[2].append(runoff[1])
                 graphData[3].append(runoff[3])
-                
+
     return [graphData, outputData]
 
 
@@ -295,7 +292,7 @@ def Calc_Form_Post():
         try:
             username = session['username']
         except:
-            username = str(random.randint(100000000,999999999))
+            username = str(random.randint(100000000, 999999999))
 
         if request.form.get('file_') == 'on':
             csv = request.files['csv_input']
@@ -308,14 +305,14 @@ def Calc_Form_Post():
                 os.remove(filepath)
         else:
             file = filedir + "static/climate_data/" + request.form['location']
-        
+
         data = csv_to_data(file, Area, Type, surface)
         input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
         graph_data = data[0]
 
         data_to_csv("static/output/", username, data[1])
         output_data = "/static/output/" + username + ".csv"
-        return render_template('index.html', roof_type=roof_type, road_type=road_type, 
+        return render_template('index.html', roof_type=roof_type, road_type=road_type,
                                carpark_type=carpark_type, input_data=input_data,
                                graph=graph, single=single, output_file=output_data,
                                graph_data=json.dumps(graph_data))
@@ -335,7 +332,7 @@ def Login_Post():
         print(user[1]+user[2])
         if str(username) == str(user[1]) and str(password) == str(user[2]):
             session['username'] = username
-            return  redirect(url_for('Home_Page'))
+            return redirect(url_for('Home_Page'))
     return render_template('Login.html', error=True)
 
 
@@ -364,7 +361,6 @@ def Sign_Up_Post():
     if redoPassword != password:
         print("non matching passwords")
         return render_template('SignUp.html', error=True, password_error=True, error_message="Passwords do not match")
-    
 
     print(username, password, redoPassword, email)
     do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
