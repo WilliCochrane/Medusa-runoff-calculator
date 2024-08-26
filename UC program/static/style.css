@@ -181,6 +181,7 @@ button:hover {
   color: rgba(237, 240, 241, 1);
   caret-color: transparent;
 }
+
 .input-box input:-webkit-autofill,
 .input-boxinput:-webkit-autofill:hover,
 .input-boxinput:-webkit-autofill:focus,
@@ -273,7 +274,7 @@ button:hover {
 }
 
 .single-event {
-    display: none;
+    display: block;
     grid-template-columns: 1fr 5fr;
     width: 300px;
     row-gap: 10px;
@@ -282,7 +283,7 @@ button:hover {
 }
 
 .full-year {
-    display: none;
+    display: block;
     margin-left: 10px;
     margin-top: 5px;
     grid-template-columns: 1fr 1fr;

@@ -7,10 +7,10 @@ import json
 import os
 import random
 
-#filedir = "/home/willicochrane/"
+# filedir = "/home/willicochrane/"
 filedir = ""
 
-app = Flask(__name__,static_folder=filedir+"static")
+app = Flask(__name__, static_folder=filedir+"static")
 UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
@@ -19,7 +19,7 @@ app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
 def do_sql(sql, values):
     db = sqlite3.connect('Coefficients.db')
     cur = db.cursor()
-    if values != None:
+    if values is not None:
         cur.execute(sql, values)
         db.commit()
     else:
@@ -249,6 +249,15 @@ def Calc_Form():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+    return render_template('index copy.html', roof_type=roof_type,
+                           road_type=road_type,
+                           carpark_type=carpark_type)
+
+@app.route('/Single_event')
+def Single_Event():
+    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
+    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
+    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
     return render_template('index.html', roof_type=roof_type,
                            road_type=road_type,
                            carpark_type=carpark_type)
@@ -312,7 +321,7 @@ def Calc_Form_Post():
 
         data_to_csv("static/output/", username, data[1])
         output_data = "/static/output/" + username + ".csv"
-        return render_template('index.html', roof_type=roof_type, road_type=road_type,
+        return render_template('index copy.html', roof_type=roof_type, road_type=road_type,
                                carpark_type=carpark_type, input_data=input_data,
                                graph=graph, single=single, output_file=output_data,
                                graph_data=json.dumps(graph_data))

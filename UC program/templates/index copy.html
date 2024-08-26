@@ -77,6 +77,16 @@
                         </select>
                     </div>
 
+                    <label for="event">Simulation:</label>
+                    <select name="event" onclick="roof_sy()" id="event" class="selection" required>
+                        <option value="">-- Select option --</option>
+                        <option value="1" class="option">Full year</option>
+                        <option value="2" class="option">Single event</option>
+                    </select>
+                </div>
+
+                <br>
+
                 <div class="single-event" id="single-event">
                     
                     <div class="centre">ADD:</div>
@@ -99,7 +109,34 @@
                      <input type="number" class="num" id="PHipt" name="PH" min="0" step=".00000001" required>
                     </div>
                 </div>
-                <br>
+
+                <div class="full-year" id="full-year"> 
+                    <div class="year-info">
+                        <div>
+                            <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
+                            <label for="location_">Year</label>
+                        </div>
+                        <div>
+                            <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
+                            <label for="file_">csv File</label>
+                        </div>
+                    </div>
+                    <div id="location">
+                        <label>Year:</label>
+                        <select name="location" id="location_input" class="selection" required>
+                            <option value="">-- Select option --</option>
+                            <option value="climate_events_2011_CCC.csv" class="option">2011</option>
+                            <option value="CCC-2018-climate.csv" class="option">2018</option>
+                            <option value="CCC-2020-climate.csv" class="option">2020</option>
+                            <option value="CCC-2021-climate.csv" class="option">2021</option>
+                            
+                        </select>
+                    </div>
+                    <div id="csv">
+                        <input id="csv_input" type="file" accept=".csv" class="selection" name="csv_input" method="POST" required>
+                    </div>
+                </div>
+
                 <button type="submit" class="submit" id="submit">Submit</button>
             </div>
         </div>
@@ -153,6 +190,25 @@
 
             <br>
             {% endif %}
+            {% if graph %}
+                <h1>Input</h1>
+                <b>Surface:</b>
+                <p>{{ input_data[0] }}</p>
+                <b>Area:</b>
+                <p>{{ input_data[1] }}</p>
+                <b>Material:</b>
+                <p>{{ input_data[2] }}</p>
+                <h1>Output</h1>
+                <a href="{{ output_file }}" download class="output-file">
+                    <button>Download data</button>
+                </a><br>
+                <h3>TSS</h3>
+                <canvas id="TSSChart" style="width:100%;max-width:600px"></canvas>
+                <h3>TZn</h3>
+                <canvas id="TZnChart" style="width:100%;max-width:600px"></canvas>
+                <h3>TCu</h3>
+                <canvas id="TCuChart" style="width:100%;max-width:600px"></canvas>
+            {% endif %}
 
     <script>
         function surface_ty() {
@@ -199,6 +255,44 @@
             }
         }
 
+        function roof_sy() {
+            var input = document.getElementById("event").value;
+            var FLInfo = document.getElementById("full-year");
+            var SEInfo = document.getElementById("single-event");
+
+            var ADD = document.getElementById("ADDipt");
+            var INT = document.getElementById("INTipt");
+            var DUR = document.getElementById("DURipt");
+            var PH = document.getElementById("PHipt");
+
+            var file_ = document.getElementById('csv_input')
+            var location_ = document.getElementById('location_input')
+            if (input == 1){
+                FLInfo.style.display = "block";
+                SEInfo.style.display = "none";
+                ADD.removeAttribute("required");
+                INT.removeAttribute("required");
+                DUR.removeAttribute("required");
+                PH.removeAttribute("required");
+                fy_input();
+                
+            }
+            else if (input == 2){
+                SEInfo.style.display = "grid";
+                FLInfo.style.display = "none";
+                ADD.setAttribute("required", "required");
+                INT.setAttribute("required", "required");
+                DUR.setAttribute("required", "required");
+                PH.setAttribute("required", "required");
+                file_.removeAttribute("required");
+                location_.removeAttribute("required");
+            }
+            else{
+                FLInfo.style.display = "none";
+                SEInfo.style.display = "none";
+            }
+        }
+
         function onlyOne(checkbox) {
             var checkboxes = document.getElementsByClassName(checkbox.className);
             for (let i = 0; i < checkboxes.length;i++) {
@@ -210,7 +304,29 @@
                 }
             }
         }
+
+        function fy_input() {
+            var file = document.getElementById('csv');
+            var location = document.getElementById('location');
+            var file_ = document.getElementById('csv_input');
+            var location_ = document.getElementById('location_input');
+
+            if (document.getElementById('file_').checked){
+                file.style.display = "grid";
+                location.style.display = "none";
+                file_.setAttribute("required", "required");
+                location_.removeAttribute("required");
+            }
+            else if (document.getElementById('location_').checked) {
+                location.style.display = "grid";
+                file.style.display = "none";
+                location_.setAttribute("required", "required");
+                file_.removeAttribute("required");
+            }
+        }
         surface_ty();
+        roof_sy();
+        fy_input();
     </script>
 
     <script>
