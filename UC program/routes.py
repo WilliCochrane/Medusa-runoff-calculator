@@ -222,6 +222,13 @@ def get_surface():
     return [surface, Type]
 
 
+def check_login():
+    username = session['username']
+    users = do_sql('SELECT * FROM User WHERE username={}'.format(username), None)
+    print(users)
+    return False
+
+
 def get_user_data(username):
     userFiles = do_sql('''SELECT * FROM File_data Where File_data.id = User_File_data.File_data_id AND
                        User_File_data.User_id = User.id And User.username = {}'''.format(username), None) 
@@ -245,7 +252,7 @@ def Home_Page():
 
 
 @app.route('/Multi_Event')
-def Calc_Form():
+def Multi_Event():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
@@ -293,9 +300,10 @@ def Single_Event_POST():
                             data=data, single=single, graph=graph)
 
 
-
 @app.route('/Multi_Event', methods=['POST'])
-def Calc_Form_Post():
+def Multi_Event_POST():
+    check_login()
+
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
@@ -354,7 +362,6 @@ def Login_Post():
     password = request.form['password']
     users = do_sql('SELECT * FROM User', None)
     for user in users:
-        print(user[1]+user[2])
         if str(username) == str(user[1]) and str(password) == str(user[2]):
             session['username'] = username
             return redirect(url_for('Home_Page'))
@@ -389,12 +396,17 @@ def Sign_Up_Post():
 
     print(username, password, redoPassword, email)
     do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
-    return redirect(url_for('Home_Page'))
+    return redirect(url_for('Login'))
 
 
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
     return render_template('404page.html')
+
+
+@app.errorhandler(500)
+def Server_error(error):
+    return render_template('500 page')
 
 
 if __name__ == "__main__":  # Last lines
