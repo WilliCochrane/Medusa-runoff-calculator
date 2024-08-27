@@ -241,30 +241,31 @@ def check_email(email):
 
 @app.route('/')
 def Home_Page():
-    return render_template('Home.html')
+    return render_template('index.html')
 
 
-@app.route('/Calculator')
+@app.route('/Multi_Event')
 def Calc_Form():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-    return render_template('index copy.html', roof_type=roof_type,
+    return render_template('Multi_Event.html', roof_type=roof_type,
                            road_type=road_type,
                            carpark_type=carpark_type)
 
-@app.route('/Single_event')
+
+@app.route('/Single_Event')
 def Single_Event():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-    return render_template('index.html', roof_type=roof_type,
+    return render_template('Single_Event.html', roof_type=roof_type,
                            road_type=road_type,
                            carpark_type=carpark_type)
 
 
-@app.route('/Calculator', methods=['POST'])
-def Calc_Form_Post():
+@app.route('/Single_Event', methods=['POST'])
+def Single_Event_POST():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
@@ -279,52 +280,67 @@ def Calc_Form_Post():
                             Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
 
     # Single event simulation
-    if int(request.form['event']) == 2:
-        ADD = float(request.form['ADD'])
-        INT = float(request.form['INT'])
-        DUR = float(request.form['DUR'])
-        PH = float(request.form['PH'])
-        single = True
-        data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
-        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
+    ADD = float(request.form['ADD'])
+    INT = float(request.form['INT'])
+    DUR = float(request.form['DUR'])
+    PH = float(request.form['PH'])
+    single = True
+    data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
+    input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
 
-        return render_template('index.html', roof_type=roof_type, road_type=road_type, 
-                               carpark_type=carpark_type, input_data=input_data,
-                               data=data, single=single, graph=graph)
+    return render_template('Single_Event.html', roof_type=roof_type, road_type=road_type, 
+                            carpark_type=carpark_type, input_data=input_data,
+                            data=data, single=single, graph=graph)
+
+
+
+@app.route('/Multi_Event', methods=['POST'])
+def Calc_Form_Post():
+    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
+    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
+    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+    Area = float(request.form['area'])
+    graph = False
+    single = False
+    data = []
+    surface = get_surface()[0]
+    Type = get_surface()[1]
+
+    surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
+                            Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
 
     # Full year simulation
-    elif int(request.form['event']) == 1:
-        graph = True
-        file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
-        surface = get_surface()[0]
-        Type = get_surface()[1]
-        try:
-            username = session['username']
-        except:
-            username = str(random.randint(100000000, 999999999))
+    graph = True
+    file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
+    surface = get_surface()[0]
+    Type = get_surface()[1]
+    try:
+        username = session['username']
+    except:
+        username = str(random.randint(100000000, 999999999))
 
-        if request.form.get('file_') == 'on':
-            csv = request.files['csv_input']
-            filename = secure_filename(csv.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            csv.save(filepath)
-            if check_file(filepath):
-                file = filepath
-            else:
-                os.remove(filepath)
+    if request.form.get('file_') == 'on':
+        csv = request.files['csv_input']
+        filename = secure_filename(csv.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        csv.save(filepath)
+        if check_file(filepath):
+            file = filepath
         else:
-            file = filedir + "static/climate_data/" + request.form['location']
+            os.remove(filepath)
+    else:
+        file = filedir + "static/climate_data/" + request.form['location']
 
-        data = csv_to_data(file, Area, Type, surface)
-        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
-        graph_data = data[0]
+    data = csv_to_data(file, Area, Type, surface)
+    input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
+    graph_data = data[0]
 
-        data_to_csv("static/output/", username, data[1])
-        output_data = "/static/output/" + username + ".csv"
-        return render_template('index copy.html', roof_type=roof_type, road_type=road_type,
-                               carpark_type=carpark_type, input_data=input_data,
-                               graph=graph, single=single, output_file=output_data,
-                               graph_data=json.dumps(graph_data))
+    data_to_csv("static/output/", username, data[1])
+    output_data = "/static/output/" + username + ".csv"
+    return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
+                           carpark_type=carpark_type, input_data=input_data,
+                           graph=graph, single=single, output_file=output_data,
+                           graph_data=json.dumps(graph_data))
 
 
 @app.route('/Login')

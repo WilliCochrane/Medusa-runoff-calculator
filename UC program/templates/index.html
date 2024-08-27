@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,300 +7,30 @@
     <title>MEDUSA 2.0</title>
 </head>
 <body>
-    {% block content %}
     <header>
         <img class="logo" scr="static\Image\Placeholder.png">
         <nav>
             <ul class="nav-links">
                 <li><a href="/">Home</a></li>
-                <li><a href="/Calculator">Multi Event Simulation</a></li>
-                <li><a href="/Single_event">Single Event Simulation</a></li>
+                <li><a href="/Multi_Event">Multi Event Simulation</a></li>
+                <li><a href="/Single_Event">Single Event Simulation</a></li>
             </ul>
         </nav>
         <a class="login" href="/Login"><button>Login</button></a>
     </header>
-    <form action="" method="POST" enctype="multipart/form-data">
-        <div>
-            <div class="surface">
-
-                <label class="check-container">Roof
-                <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty()" checked>
-                <span class="checkmark"></span>
-                </label>
-                
-                <label class="check-container">Road
-                <input class="check" type="checkbox" id="road_" name="road_" onclick="onlyOne(this),surface_ty()">
-                <span class="checkmark"></span>
-                </label>
-                
-                <label class="check-container">Carpark
-                <input class="check" type="checkbox" id="carpark_" name="carpark_" onclick="onlyOne(this),surface_ty()">
-                <span class="checkmark"></span>
-                </label>
-                
-            </div>
-            
-            <div id="inputs">
-                <div class="inline">
-                    <div class="centre">Surface Area:</div>
-                    <div>
-                        <input type="number" class="num" id="area" name="area" min="1" step=".00000001" required> m<sup>2</sup>
-                    </div>
-
-                    <label>Material type:</label>
-
-                    <div id="roof">
-                        <select name="roof_type" id="roof_type" class="selection" method="POST" required>
-                            <option value="">-- Select option --</option>
-                            {% for type in roof_type %}
-                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div id="road" style="display: none;">
-                        <select name="road_type" id="road_type" class="selection" method="POST" required>
-                            <option value="">-- Select option --</option>
-                            {% for type in road_type %}
-                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div id="carpark" style="display: none;">
-                        <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
-                            <option value="">-- Select option --</option>
-                            {% for type in carpark_type %}
-                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                <div class="single-event" id="single-event">
-                    
-                    <div class="centre">ADD:</div>
-                    <div>
-                        <input type="number" class="num" id="ADDipt" name="ADD" min="0" step=".00000001" required> day
-                    </div>
-
-                    <div class="centre">INT:</div>
-                    <div>
-                        <input type="number" class="num" id="INTipt" name="INT" min="0" step=".00000001" required> mm/h
-                    </div>
-
-                    <div class="centre">DUR:</div>
-                    <div>
-                        <input type="number" class="num" id="DURipt" name="DUR" min="0" step=".00000001" required> h
-                    </div>
-
-                    <div class="centre">pH:</div>
-                    <div>
-                     <input type="number" class="num" id="PHipt" name="PH" min="0" step=".00000001" required>
-                    </div>
-                </div>
-                <br>
-                <button type="submit" class="submit" id="submit">Submit</button>
-            </div>
-        </div>
-    </form>
-    
-    {% if single %}
-        <div class="output">
-            <div class="output-container">
-                <h1>Input</h1><h1></h1>
-                <div class="info-prompt">Surface:</div> 
-                <div class="info">{{ input_data[0] }}</div>
-                <div class="info-prompt">Area:</div> 
-                <div class="info">{{ input_data[1] }} m<sup>2</sup></div>
-                <div class="info-prompt">Material:</div> 
-                <div class="info">{{ input_data[2] }}</div>
-                <div class="info-prompt">ADD:</div> 
-                <div class="info">{{ input_data[3] }} days</div>
-                <div class="info-prompt">INT:</div> 
-                <div class="info">{{ input_data[4] }} mm/h</div>
-                <div class="info-prompt">DUR:</div> 
-                <div class="info">{{ input_data[5] }} h</div>
-                <div class="info-prompt">pH:</div> 
-                <div class="info">{{ input_data[6] }}</div>
-                <h1>Output</h1><h1></h1>
-                <div class="info-prompt">TSS:</div> 
-                <div class="info" id="TSS">{{ data[0] }} mg</div>
-                <div class="info-prompt">TZn:</div> 
-                <div class="info" id="TZn">{{ data[1] }} mg</div>
-                <div class="info-prompt">DZn:</div> 
-                <div class="info" id="DZn">{{ data[2] }} mg</div>
-                <div class="info-prompt">TCu:</div> 
-                <div class="info" id="TCu">{{ data[3] }} mg</div>
-                <div class="info-prompt">DCu:</div> 
-                <div class="info" id="DCu">{{ data[4] }} mg</div>
-                <div class="info-prompt">Water</div> 
-                <div class="info" id="Water">{{ data[5] }} L</div>
-                <div class="info-prompt">Flow Rate</div> 
-                <div class="info" id="FlowRate">{{ data[6] }} L/min</div>
-                <div class="info-prompt">Conc. TSS:</div> 
-                <div class="info" id="TSS">{{ data[7] }} mg/L</div>
-                <div class="info-prompt">Conc. TZn:</div> 
-                <div class="info" id="TZn">{{ data[8] }} mg/L</div>
-                <div class="info-prompt">Conc. DZn:</div> 
-                <div class="info" id="DZn">{{ data[9] }} mg/L</div>
-                <div class="info-prompt">Conc. TCu:</div> 
-                <div class="info" id="TCu">{{ data[10] }} mg/L</div>
-                <div class="info-prompt">Conc. DCu:</div> 
-                <div class="info" id="DCu">{{ data[11] }} mg/L</div>
-            </div>
-        </div>
-
-            <br>
-            {% endif %}
-
-    <script>
-        function surface_ty() {
-            var inputs = document.getElementById("inputs");
-            var road = document.getElementById("road");
-            var roof = document.getElementById("roof");
-            var carpark = document.getElementById("carpark");
-
-            var road_type = document.getElementById("road_type");
-            var roof_type = document.getElementById("roof_type");
-            var carpark_type = document.getElementById("carpark_type");
-            if (document.getElementById("roof_").checked) {
-                inputs.style.display = "block";
-                roof.style.display = "block";
-                road.style.display = "none";
-                carpark.style.display = "none";
-
-                road_type.removeAttribute("required");
-                roof_type.setAttribute("required", "required");
-                carpark_type.removeAttribute("required");
-            } else if (document.getElementById("road_").checked) {
-                inputs.style.display = "block";
-                road.style.display = "block";
-                roof.style.display = "none";
-                carpark.style.display = "none";
-
-                road_type.setAttribute("required", "required");
-                roof_type.removeAttribute("required");
-                carpark_type.removeAttribute("required");
-            } else if (document.getElementById("carpark_").checked) {
-                inputs.style.display = "block";
-                carpark.style.display = "block";
-                roof.style.display = "none";
-                road.style.display = "none";
-
-                road_type.removeAttribute("required");
-                roof_type.removeAttribute("required");
-                carpark_type.setAttribute("required", "required");
-            } else {
-                roof.style.display = "none";
-                road.style.display = "none";
-                carpark.style.display = "none";
-                inputs.style.display = "none";
-            }
-        }
-
-        function onlyOne(checkbox) {
-            var checkboxes = document.getElementsByClassName(checkbox.className);
-            for (let i = 0; i < checkboxes.length;i++) {
-                if (checkboxes.item(i) !== checkbox){
-                    checkboxes.item(i).checked = false;
-                }
-                else {
-                    checkboxes.item(i).checked = true;
-                }
-            }
-        }
-        surface_ty();
-    </script>
-
-    <script>
-        var barColor = "#2196F3";
-        function drawChart(graph_data) {
-        // Set Data
-        window.onload = function() {
-            xValues = graph_data[0]
-            yValues = graph_data[1]
-            new Chart("TSSChart", {
-                type: "bar",
-                data: {
-                    labels: xValues,
-                    datasets: [{
-                    backgroundColor: barColor,
-                    data: yValues
-                    }]
-                },
-                options: {
-                    legend: {display: false},
-                    scales: {
-                    yAxes: [{
-                        ticks: {
-                        beginAtZero: true,
-                        callback: function(value, index, ticks) {
-                        return value + ' mg';}
-                        }
-                    }],
-                    }
-                }
-            });
-
-            xValues = graph_data[0]
-            yValues = graph_data[3]
-            new Chart("TCuChart", {
-                type: "bar",
-                data: {
-                    labels: xValues,
-                    datasets: [{
-                    backgroundColor: barColor,
-                    data: yValues
-                    }]
-                },
-                options: {
-                    legend: {display: false},
-                    scales: {
-                    yAxes: [{
-                        ticks: {
-                        beginAtZero: true,
-                        callback: function(value, index, ticks) {
-                            return value + ' mg';
-                        }
-                        }
-                    }],
-                    }
-                }
-            });
-
-            xValues = graph_data[0]
-            yValues = graph_data[2]
-            new Chart("TZnChart", {
-                type: "bar",
-                data: {
-                    labels: xValues,
-                    datasets: [{
-                    backgroundColor: barColor,
-                    data: yValues
-                    }]
-                },
-                options: {
-                    legend: {display: false},
-                    
-                    scales: {
-                        
-                    yAxes: [{
-                        
-                        ticks: {
-                        beginAtZero: true,
-                        callback: function(value, index, ticks) {
-                        return value + ' mg';}
-                        }
-                    }],
-                    }
-                }                
-            });
-        };
-        };
-        {% if graph %}
-        drawChart({{ graph_data|safe }});
-        {% endif %}
-    </script>
-    {% endblock %}
+    <div class="home-info-text">
+        <h1>MEDUSA 2.0</h1>
+        <h2>A tool for estimating heavy metal pollution from roof, road, and carpark surfaces.</h3>
+        <p>Modelled Estimates of Discharges for Urban Stormwater Assessments (MEDUSA) simulates heavy metal loading contribution from 
+            individual urban surfaces for a single rainfall event or multiple events (full year).  The tool allows the estimation of 
+            total suspended solids (TSS), total zinc (TZn), total copper (TCu), dissolved zinc (DZn), and dissolved copper (DCu), from 
+            roofs, roads, and carparks.  To run the tool, you need to select a surface type (roof, road, carpark), provide the surface 
+            area, select the surface material type, and provide climate inputs for a single or full year rainfall events.  Climatic 
+            inputs include average rainfall intensity during event (INT), duration (DUR), antecedent dry days (ADD), and rainfall pH 
+            (~6.5 for New Zealand).</p><br>
+            <p>Further information on the tool and its application can be found in these scientific journal publications:</p>
+            <a class="info-link" href="https://www.mdpi.com/2073-4441/12/4/969">Predicting Event-Based Sediment and Heavy Metal Loads in Untreated Urban Runoff from Impermeable Surfaces</a><br>
+            <a class="info-link" href="https://www.sciencedirect.com/science/article/pii/S0301479722016498?via%3Dihub">Influences of zinc loads in urban catchment runoff: Roof type, land use type, climate and management strategies</a>
+    </div>
 </body>
 </html>

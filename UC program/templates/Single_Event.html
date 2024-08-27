@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<head>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>MEDUSA 2.0</title>
+</head>
+<body>
+    {% block content %}
+    <header>
+        <img class="logo" scr="static\Image\Placeholder.png">
+        <nav>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/Multi_Event">Multi Event Simulation</a></li>
+                <li><a href="/Single_Event">Single Event Simulation</a></li>
+            </ul>
+        </nav>
+        <a class="login" href="/Login"><button>Login</button></a>
+    </header>
+    <form action="" method="POST" enctype="multipart/form-data">
+        <div>            
+            <div class="flex-align">
+                <div class="wrapper">
+                    <div class="surface">
+
+                        <label class="check-container">Roof
+                        <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty()" checked>
+                        <span class="checkmark"></span>
+                        </label>
+                        
+                        <label class="check-container">Road
+                        <input class="check" type="checkbox" id="road_" name="road_" onclick="onlyOne(this),surface_ty()">
+                        <span class="checkmark"></span>
+                        </label>
+                        
+                        <label class="check-container">Carpark
+                        <input class="check" type="checkbox" id="carpark_" name="carpark_" onclick="onlyOne(this),surface_ty()">
+                        <span class="checkmark"></span>
+                        </label>
+                        
+                    </div>
+
+                    <div class="input-box">
+                        <input type="number" id="SE-area" 
+                        name="area" min=".01" step=".01" required>
+                        <p>Area</p>
+                        <i class="suffix">m<sup>2</sup></i>
+                    </div>
+
+                    <label>Material type:</label>
+
+                    <div id="roof">
+                        <select name="roof_type" id="roof_type" class="selection" method="POST" required>
+                            <option value="">-- Select option --</option>
+                            {% for type in roof_type %}
+                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="road" style="display: none;">
+                        <select name="road_type" id="road_type" class="selection" method="POST" required>
+                            <option value="">-- Select option --</option>
+                            {% for type in road_type %}
+                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="carpark" style="display: none;">
+                        <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
+                            <option value="">-- Select option --</option>
+                            {% for type in carpark_type %}
+                            <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                <br>
+
+                <div class="input-box">
+                    <input type="number" id="ADDipt" 
+                    name="ADD" min=".01" step=".01" required>
+                    <p>ADD</p>
+                    <i class="suffix">day</i>
+                </div>
+                
+
+                <div class="input-box">
+                    <input class="" type="number" id="INTipt" 
+                    name="INT" min=".01" step=".01" required>
+                    <p>Intensity</p>
+                    <i class="suffix">mm/h</i>
+                </div>
+
+                <div class="input-box">
+                    <input type="number" id="INTipt" 
+                    name="DUR" min=".01" step=".01" required>
+                    <p>Duration</p>
+                    <i class="suffix">h</i>
+                </div>
+
+                <div class="input-box">
+                    <input type="number" id="PHipt" 
+                    name="PH" min="0" step=".01" required>
+                    <p>pH</p>
+                </div>
+
+                <button type="submit" class="submit" id="submit">Submit</button>
+            </div>
+            {% if single %}
+            <div class="output">
+                <div class="output-container">
+                    <h1>Input</h1><h1></h1>
+                    <div class="info-prompt">Surface:</div> 
+                    <div class="info">{{ input_data[0] }}</div>
+                    <div class="info-prompt">Area:</div> 
+                    <div class="info">{{ input_data[1] }} m<sup>2</sup></div>
+                    <div class="info-prompt">Material:</div> 
+                    <div class="info">{{ input_data[2] }}</div>
+                    <div class="info-prompt">ADD:</div> 
+                    <div class="info">{{ input_data[3] }} days</div>
+                    <div class="info-prompt">INT:</div> 
+                    <div class="info">{{ input_data[4] }} mm/h</div>
+                    <div class="info-prompt">DUR:</div> 
+                    <div class="info">{{ input_data[5] }} h</div>
+                    <div class="info-prompt">pH:</div> 
+                    <div class="info">{{ input_data[6] }}</div>
+                    <h1>Output</h1><h1></h1>
+                    <div class="info-prompt">TSS:</div> 
+                    <div class="info" id="TSS">{{ data[0] }} mg</div>
+                    <div class="info-prompt">TZn:</div> 
+                    <div class="info" id="TZn">{{ data[1] }} mg</div>
+                    <div class="info-prompt">DZn:</div> 
+                    <div class="info" id="DZn">{{ data[2] }} mg</div>
+                    <div class="info-prompt">TCu:</div> 
+                    <div class="info" id="TCu">{{ data[3] }} mg</div>
+                    <div class="info-prompt">DCu:</div> 
+                    <div class="info" id="DCu">{{ data[4] }} mg</div>
+                    <div class="info-prompt">Water</div> 
+                    <div class="info" id="Water">{{ data[5] }} L</div>
+                    <div class="info-prompt">Flow Rate</div> 
+                    <div class="info" id="FlowRate">{{ data[6] }} L/min</div>
+                    <div class="info-prompt">Conc. TSS:</div> 
+                    <div class="info" id="TSS">{{ data[7] }} mg/L</div>
+                    <div class="info-prompt">Conc. TZn:</div> 
+                    <div class="info" id="TZn">{{ data[8] }} mg/L</div>
+                    <div class="info-prompt">Conc. DZn:</div> 
+                    <div class="info" id="DZn">{{ data[9] }} mg/L</div>
+                    <div class="info-prompt">Conc. TCu:</div> 
+                    <div class="info" id="TCu">{{ data[10] }} mg/L</div>
+                    <div class="info-prompt">Conc. DCu:</div> 
+                    <div class="info" id="DCu">{{ data[11] }} mg/L</div>
+                </div>
+            </div>
+    
+            <br>
+        {% endif %}
+        </div>
+    </form>
+
+
+    <script>
+        function surface_ty() {
+            var road = document.getElementById("road");
+            var roof = document.getElementById("roof");
+            var carpark = document.getElementById("carpark");
+
+            var road_type = document.getElementById("road_type");
+            var roof_type = document.getElementById("roof_type");
+            var carpark_type = document.getElementById("carpark_type");
+            if (document.getElementById("roof_").checked) {
+                roof.style.display = "block";
+                road.style.display = "none";
+                carpark.style.display = "none";
+
+                road_type.removeAttribute("required");
+                roof_type.setAttribute("required", "required");
+                carpark_type.removeAttribute("required");
+            } else if (document.getElementById("road_").checked) {
+                road.style.display = "block";
+                roof.style.display = "none";
+                carpark.style.display = "none";
+
+                road_type.setAttribute("required", "required");
+                roof_type.removeAttribute("required");
+                carpark_type.removeAttribute("required");
+            } else if (document.getElementById("carpark_").checked) {
+                carpark.style.display = "block";
+                roof.style.display = "none";
+                road.style.display = "none";
+
+                road_type.removeAttribute("required");
+                roof_type.removeAttribute("required");
+                carpark_type.setAttribute("required", "required");
+            }
+        }
+
+        function onlyOne(checkbox) {
+            var checkboxes = document.getElementsByClassName(checkbox.className);
+            for (let i = 0; i < checkboxes.length;i++) {
+                if (checkboxes.item(i) !== checkbox){
+                    checkboxes.item(i).checked = false;
+                }
+                else {
+                    checkboxes.item(i).checked = true;
+                }
+            }
+        }
+        surface_ty();
+    </script>
+
+    {% endblock %}
+</body>
+</html>
