@@ -20,7 +20,6 @@
         </nav>
         <a class="login" href="/Login"><button>Login</button></a>
     </header>
-    
     <form action="" method="POST" enctype="multipart/form-data">           
        <div class="flex-align">
            <div class="wrapper">
@@ -108,38 +107,37 @@
                 </div>
                 <button type="submit" class="submit" id="submit">Submit</button>
             </div>
-            {% if graph %}
-                <div>
-                    <h1>Input</h1>
-                    <b>Surface:</b>
-                    <p>{{ input_data[0] }}</p>
-                    <b>Area:</b>
-                    <p>{{ input_data[1] }}</p>
-                    <b>Material:</b>
-                    <p>{{ input_data[2] }}</p>
-                    <h1>Output</h1>
-                    <a href="{{ output_file }}" download class="output-file">
-                        <button>Download data</button>
-                    </a><br>
-                    <div class="graph">
-                        <h3>TSS</h3>
-                        <canvas id="TSSChart" style="width:100%;max-width:600px"></canvas>
-                    </div>
-
-                    <div class="graph">
-                        <h3>TZn</h3>
-                        <canvas id="TZnChart" style="width:100%;max-width:600px"></canvas>
-                    </div>
-
-                    <div class="graph">
-                        <h3>TCu</h3>
-                        <canvas id="TCuChart" style="width:100%;max-width:600px"></canvas>
-                    </div>
-                </div>
-            {% endif %}
         </div>
     </form>
+    {% if graph %}
+        <div>
+            <h1>Input</h1>
+            <b>Surface:</b>
+            <p>{{ input_data[0] }}</p>
+            <b>Area:</b>
+            <p>{{ input_data[1] }}</p>
+            <b>Material:</b>
+            <p>{{ input_data[2] }}</p>
+            <h1>Output</h1>
+            <a href="{{ output_file }}" download class="output-file">
+                <button>Download data</button>
+            </a><br>
+            <div class="graph">
+                <h3>TSS</h3>
+                <canvas id="TSSChart" style="width:100%;max-width:600px"></canvas>
+            </div>
 
+            <div class="graph">
+                <h3>TZn</h3>
+                <canvas id="TZnChart" style="width:100%;max-width:600px"></canvas>
+            </div>
+
+            <div class="graph">
+                <h3>TCu</h3>
+                <canvas id="TCuChart" style="width:100%;max-width:600px"></canvas>
+            </div>
+        </div>
+    {% endif %}
 
     <script>
         function surface_ty() {

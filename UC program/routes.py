@@ -223,10 +223,13 @@ def get_surface():
 
 
 def check_login():
-    username = session['username']
-    users = do_sql('SELECT * FROM User WHERE username={}'.format(username), None)
-    print(users)
-    return False
+    try:
+        username = session['username']
+        users = do_sql('SELECT * FROM User WHERE username={}'.format(username), None)
+        print(users)
+        return True
+    except:
+        return False
 
 
 def get_user_data(username):
@@ -295,7 +298,7 @@ def Single_Event_POST():
     data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
     input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
 
-    return render_template('Single_Event.html', roof_type=roof_type, road_type=road_type, 
+    return render_template('Single_Event.html', roof_type=roof_type, road_type=road_type,
                             carpark_type=carpark_type, input_data=input_data,
                             data=data, single=single, graph=graph)
 

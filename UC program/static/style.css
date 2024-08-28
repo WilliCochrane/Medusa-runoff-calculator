@@ -203,10 +203,6 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* Firefox */
-input[type=number] {
-  -moz-appearance: textfield;
-}
 .input-box input:valid + p {
   font-size: 10px;
   top: 0;
@@ -255,76 +251,76 @@ input[type=number] {
 }
 
 .content-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    width: 100%;
-    height: fit-content;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  width: 100%;
+  height: fit-content;
 }
 
 .inline {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    width: fit-content;
-    row-gap: 10%;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  width: fit-content;
+  row-gap: 10%;
 }
 
 .centre {
-    margin-top: auto;
-    margin-bottom: auto;
-    width: 100px;
+  margin-top: auto;
+  margin-bottom: auto;
+  width: 100px;
 }
 
 .num {
-    width: 80px;
+  width: 80px;
 }
 
 .selection {
-    width: fit-content;
-    height: fit-content;
-    text-align: center;
+  width: fit-content;
+  height: fit-content;
+  text-align: center;
 }
 
 .option {
-    text-align: left;
+  text-align: left;
 }
 
 .single-event {
-    display: block;
-    grid-template-columns: 1fr 5fr;
-    width: 300px;
-    row-gap: 10px;
-    margin-left: 10px;
-    margin-top: 5px;
+  display: block;
+  grid-template-columns: 1fr 5fr;
+  width: 300px;
+  row-gap: 10px;
+  margin-left: 10px;
+  margin-top: 5px;
 }
 
 .full-year {
-    display: block;
-    margin-left: 10px;
-    margin-top: 5px;
-    grid-template-columns: 1fr 1fr;
-    width: 300px;
-}
-
-.submit {
-    margin-top: 10px;
+  display: block;
+  margin-left: 10px;
+  margin-top: 5px;
+  grid-template-columns: 1fr 1fr;
+  width: 300px;
 }
 
 .output {
-    margin-top: 10px;
+  margin: auto;
+  width: 420px;
 }
 
 .output-container { 
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    width: fit-content;
-    gap: 5px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  width: 100%;
+  border: 3px solid rgba(237, 240, 241, 0.6);
+  border-radius: 10px;
+  padding: 30px 40px;
 }
 
 .surface {
-    display: grid;
-    grid-template-columns: 1fr;
-    width: fit-content;
-    row-gap: 4px;
+  display: grid;
+  grid-template-columns: 1fr;
+  width: fit-content;
+  row-gap: 4px;
 }
 
 .check {
@@ -440,15 +436,17 @@ input[type=number] {
 }
 
 .graph {
-  display: flex;
+  display: grid;
+  grid-template-columns: 20px 1fr;
 }
 
 .graph h3 {
   writing-mode: vertical-rl;
-  margin-bottom: 27%;
+  margin: auto;
   -moz-transform: scale(-1, -1);
   -webkit-transform: scale(-1, -1);
   -o-transform: scale(-1, -1);
   -ms-transform: scale(-1, -1);
   transform: scale(-1, -1);
 }
+
