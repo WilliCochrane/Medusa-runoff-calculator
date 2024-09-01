@@ -31,6 +31,10 @@ p {
   text-decoration: none;
 }
 
+i {
+  background: transparent;
+}
+
 li, a, button{
   font-optical-sizing: auto;
   font-weight: 500;
@@ -316,6 +320,23 @@ input::-webkit-inner-spin-button {
   padding: 30px 40px;
 }
 
+.graph-output {
+  margin: auto;
+  width: fit-content;
+  max-width: 80vw;
+  margin: auto;
+}
+
+.graph-output-container { 
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  width: 100%;
+  border: 3px solid rgba(237, 240, 241, 0.6);
+  border-radius: 10px;
+  padding: 30px 40px;
+}
+
 .surface {
   display: grid;
   grid-template-columns: 1fr;
@@ -324,7 +345,7 @@ input::-webkit-inner-spin-button {
 }
 
 .check {
-    top: 0px;
+  top: 0px;
 }
 
 /* The container */
@@ -436,6 +457,7 @@ input::-webkit-inner-spin-button {
 }
 
 .graph {
+  margin: auto;
   display: grid;
   grid-template-columns: 20px 1fr;
 }

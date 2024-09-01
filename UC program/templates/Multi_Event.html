@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <title>MEDUSA 2.0</title>
 </head>
 <body>
@@ -20,121 +21,126 @@
         </nav>
         <a class="login" href="/Login"><button>Login</button></a>
     </header>
-    <form action="" method="POST" enctype="multipart/form-data">           
-       <div class="flex-align">
-           <div class="wrapper">
-               <div class="surface">
+    <form action="" method="POST" enctype="multipart/form-data">
+        <div class="wrapper">
+            <div class="surface">
 
-                   <label class="check-container">Roof
-                   <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty()" checked>
-                   <span class="checkmark"></span>
-                   </label>
-                   
-                   <label class="check-container">Road
-                   <input class="check" type="checkbox" id="road_" name="road_" onclick="onlyOne(this),surface_ty()">
-                   <span class="checkmark"></span>
-                   </label>
-                   
-                   <label class="check-container">Carpark
-                   <input class="check" type="checkbox" id="carpark_" name="carpark_" onclick="onlyOne(this),surface_ty()">
-                   <span class="checkmark"></span>
-                   </label>
-                   
-               </div>
+                <label class="check-container">Roof
+                <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty()" checked>
+                <span class="checkmark"></span>
+                </label>
+                
+                <label class="check-container">Road
+                <input class="check" type="checkbox" id="road_" name="road_" onclick="onlyOne(this),surface_ty()">
+                <span class="checkmark"></span>
+                </label>
+                
+                <label class="check-container">Carpark
+                <input class="check" type="checkbox" id="carpark_" name="carpark_" onclick="onlyOne(this),surface_ty()">
+                <span class="checkmark"></span>
+                </label>
+                
+            </div>
 
-               <div class="input-box">
-                   <input type="number" id="SE-area" 
-                   name="area" min=".01" step=".01" required>
-                   <p>Area</p>
-                   <i class="suffix">m<sup>2</sup></i>
-               </div>
+            <div class="input-box">
+                <input type="number" id="SE-area" 
+                name="area" min=".01" step=".01" required>
+                <p>Area</p>
+                <i class="suffix">m<sup>2</sup></i>
+            </div>
 
-               <label>Material type:</label>
+            <label>Material type:</label>
 
-               <div id="roof">
-                   <select name="roof_type" id="roof_type" class="selection" method="POST" required>
-                       <option value="">-- Select option --</option>
-                       {% for type in roof_type %}
-                       <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                       {% endfor %}
-                   </select>
-               </div>
+            <div id="roof">
+                <select name="roof_type" id="roof_type" class="selection" method="POST" required>
+                    <option value="">-- Select option --</option>
+                    {% for type in roof_type %}
+                    <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-               <div id="road" style="display: none;">
-                   <select name="road_type" id="road_type" class="selection" method="POST" required>
-                       <option value="">-- Select option --</option>
-                       {% for type in road_type %}
-                       <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                       {% endfor %}
-                   </select>
-               </div>
+            <div id="road" style="display: none;">
+                <select name="road_type" id="road_type" class="selection" method="POST" required>
+                    <option value="">-- Select option --</option>
+                    {% for type in road_type %}
+                    <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-               <div id="carpark" style="display: none;">
-                   <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
-                       <option value="">-- Select option --</option>
-                       {% for type in carpark_type %}
-                       <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
-                       {% endfor %}
-                   </select>
-               </div>
+            <div id="carpark" style="display: none;">
+                <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
+                    <option value="">-- Select option --</option>
+                    {% for type in carpark_type %}
+                    <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <br>
-                <div class="full-year" id="full-year"> 
-                    <div class="year-info">
-                        <div>
-                            <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
-                            <label for="location_">Year</label>
-                        </div>
-                        <div>
-                            <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
-                            <label for="file_">csv File</label>
-                        </div>
+            <br>
+            <div class="full-year" id="full-year"> 
+                <div class="year-info">
+                    <div>
+                        <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
+                        <label for="location_">Year</label>
                     </div>
-                    <div id="location">
-                        <label>Year:</label>
-                        <select name="location" id="location_input" class="selection" required>
-                            <option value="">-- Select option --</option>
-                            <option value="climate_events_2011_CCC.csv" class="option">2011</option>
-                            <option value="CCC-2018-climate.csv" class="option">2018</option>
-                            <option value="CCC-2020-climate.csv" class="option">2020</option>
-                            <option value="CCC-2021-climate.csv" class="option">2021</option>
-                            
-                        </select>
-                    </div>
-                    <div id="csv">
-                        <input id="csv_input" type="file" accept=".csv" class="selection" name="csv_input" method="POST" required>
+                    <div>
+                        <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
+                        <label for="file_">csv File</label>
                     </div>
                 </div>
-                <button type="submit" class="submit" id="submit">Submit</button>
+                <div id="location">
+                    <label>Year:</label>
+                    <select name="location" id="location_input" class="selection" required>
+                        <option value="">-- Select option --</option>
+                        <option value="climate_events_2011_CCC.csv" class="option">2011</option>
+                        <option value="CCC-2018-climate.csv" class="option">2018</option>
+                        <option value="CCC-2020-climate.csv" class="option">2020</option>
+                        <option value="CCC-2021-climate.csv" class="option">2021</option>
+                        
+                    </select>
+                </div>
+                <div id="csv">
+                    <input id="csv_input" type="file" accept=".csv" class="selection" name="csv_input" method="POST" required>
+                </div>
             </div>
+            <br>
+            <button type="submit" class="submit" id="submit">Submit</button>
         </div>
     </form>
+    <br>
     {% if graph %}
-        <div>
-            <h1>Input</h1>
-            <b>Surface:</b>
-            <p>{{ input_data[0] }}</p>
-            <b>Area:</b>
-            <p>{{ input_data[1] }}</p>
-            <b>Material:</b>
-            <p>{{ input_data[2] }}</p>
-            <h1>Output</h1>
-            <a href="{{ output_file }}" download class="output-file">
-                <button>Download data</button>
-            </a><br>
-            <div class="graph">
-                <h3>TSS</h3>
-                <canvas id="TSSChart" style="width:100%;max-width:600px"></canvas>
+        <div class="output">
+            <div class="output-container">
+                <b>Surface:</b>
+                <p>{{ input_data[0] }}</p>
+                <b>Area:</b>
+                <p>{{ input_data[1] }}m<sup>2</sup></p>
+                <b>Material:</b>
+                <p>{{ input_data[2] }}</p>
+                <a href="{{ output_file }}" download class="output-file">
+                    <button type="menu">Data <i class='bx bxs-download'></i></button>
+                </a>
             </div>
+        </div>
+        <br>
+        <div class="graph-output">
+            <div class="graph-output-container">
+                <div class="graph">
+                    <h3>TSS</h3>
+                    <canvas id="TSSChart" style="width:100%;max-width:600px"></canvas>
+                </div>
 
-            <div class="graph">
-                <h3>TZn</h3>
-                <canvas id="TZnChart" style="width:100%;max-width:600px"></canvas>
-            </div>
+                <div class="graph">
+                    <h3>TZn</h3>
+                    <canvas id="TZnChart" style="width:100%;max-width:600px"></canvas>
+                </div>
 
-            <div class="graph">
-                <h3>TCu</h3>
-                <canvas id="TCuChart" style="width:100%;max-width:600px"></canvas>
+                <div class="graph">
+                    <h3>TCu</h3>
+                    <canvas id="TCuChart" style="width:100%;max-width:600px"></canvas>
+                </div>
             </div>
         </div>
     {% endif %}

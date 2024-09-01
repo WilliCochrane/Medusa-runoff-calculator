@@ -7,7 +7,7 @@ import json
 import os
 import random
 
-# filedir = "/home/willicochrane/"
+#filedir = "/home/willicochrane/"
 filedir = ""
 
 app = Flask(__name__, static_folder=filedir+"static")
@@ -224,12 +224,13 @@ def get_surface():
 
 def check_login():
     try:
-        username = session['username']
-        users = do_sql('SELECT * FROM User WHERE username={}'.format(username), None)
-        print(users)
-        return True
+        if session['username']:
+            return True
+        else:
+            return False
     except:
         return False
+
 
 
 def get_user_data(username):
@@ -256,12 +257,15 @@ def Home_Page():
 
 @app.route('/Multi_Event')
 def Multi_Event():
-    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
-    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
-    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-    return render_template('Multi_Event.html', roof_type=roof_type,
-                           road_type=road_type,
-                           carpark_type=carpark_type)
+    if check_login():
+        roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
+        road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
+        carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+        return render_template('Multi_Event.html', roof_type=roof_type,
+                            road_type=road_type,
+                            carpark_type=carpark_type)
+    else:
+        return render_template('needToLogin.html')
 
 
 @app.route('/Single_Event')
@@ -305,53 +309,52 @@ def Single_Event_POST():
 
 @app.route('/Multi_Event', methods=['POST'])
 def Multi_Event_POST():
-    check_login()
+    if check_login():
+        roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
+        road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
+        carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+        Area = float(request.form['area'])
+        graph = False
+        single = False
+        data = []
+        surface = get_surface()[0]
+        Type = get_surface()[1]
 
-    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
-    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
-    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-    Area = float(request.form['area'])
-    graph = False
-    single = False
-    data = []
-    surface = get_surface()[0]
-    Type = get_surface()[1]
+        surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
+                                Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
 
-    surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
-                            Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
+        # Full year simulation
+        graph = True
+        file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
+        surface = get_surface()[0]
+        Type = get_surface()[1]
 
-    # Full year simulation
-    graph = True
-    file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
-    surface = get_surface()[0]
-    Type = get_surface()[1]
-    try:
         username = session['username']
-    except:
-        username = str(random.randint(100000000, 999999999))
 
-    if request.form.get('file_') == 'on':
-        csv = request.files['csv_input']
-        filename = secure_filename(csv.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        csv.save(filepath)
-        if check_file(filepath):
-            file = filepath
+        if request.form.get('file_') == 'on':
+            csv = request.files['csv_input']
+            filename = secure_filename(csv.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            csv.save(filepath)
+            if check_file(filepath):
+                file = filepath
+            else:
+                os.remove(filepath)
         else:
-            os.remove(filepath)
+            file = filedir + "static/climate_data/" + request.form['location']
+
+        data = csv_to_data(file, Area, Type, surface)
+        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
+        graph_data = data[0]
+
+        data_to_csv("static/output/", username, data[1])
+        output_data = "/static/output/" + username + ".csv"
+        return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
+                            carpark_type=carpark_type, input_data=input_data,
+                            graph=graph, single=single, output_file=output_data,
+                            graph_data=json.dumps(graph_data))
     else:
-        file = filedir + "static/climate_data/" + request.form['location']
-
-    data = csv_to_data(file, Area, Type, surface)
-    input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
-    graph_data = data[0]
-
-    data_to_csv("static/output/", username, data[1])
-    output_data = "/static/output/" + username + ".csv"
-    return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
-                           carpark_type=carpark_type, input_data=input_data,
-                           graph=graph, single=single, output_file=output_data,
-                           graph_data=json.dumps(graph_data))
+        return render_template('needToLogin.html')
 
 
 @app.route('/Login')
