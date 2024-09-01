@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <title>MEDUSA 2.0</title>
+</head>
+<body>
+    <header>
+        <img class="logo" scr="static/Image/Placeholder.png">
+        <nav>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/Multi_Event">Multi Event Simulation</a></li>
+                <li><a href="/Single_Event">Single Event Simulation</a></li>
+            </ul>
+        </nav>
+        <a class="login" href="/Login"><button>Login</button></a>
+    </header>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
