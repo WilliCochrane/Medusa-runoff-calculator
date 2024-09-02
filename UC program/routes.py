@@ -139,7 +139,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
         # Calculating TZn road/carpark
         DZn = m1*TZn
 
-        # TSS *= 1000
+        TSS *= 1000
     CTSS = TSS/volume
     CTCu = TCu/volume
     CTZn = TZn/volume
@@ -328,13 +328,15 @@ def Multi_Event_POST():
         file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
         surface = get_surface()[0]
         Type = get_surface()[1]
-
         username = session['username']
 
         if request.form.get('file_') == 'on':
+            file_name = request.form['file_name']
             csv = request.files['csv_input']
             filename = secure_filename(csv.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], username + filename)
+            userId = do_sql('SELECT id FROM User WHERE username="{}"'.format(username), None)
+            do_sql('INSERT INTO File_data (name, path, file_type, user_id) VALUES (?,?,?,?);', (file_name, username + filename, 1, userId[0]))
             csv.save(filepath)
             if check_file(filepath):
                 file = filepath

@@ -22,8 +22,7 @@
             </div>
 
             <div class="input-box">
-                <input type="number" id="SE-area" 
-                name="area" min=".01" step=".01" required>
+                <input type="number" id="ME-area" name="area" min=".01" step=".01" required>
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
@@ -57,34 +56,36 @@
                 </select>
             </div>
 
-            <br>
-            <div class="full-year" id="full-year"> 
-                <div class="year-info">
-                    <div>
-                        <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
-                        <label for="location_">Year</label>
-                    </div>
-                    <div>
-                        <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
-                        <label for="file_">csv File</label>
-                    </div>
+            <br> 
+            <div class="year-info">
+                <div>
+                    <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
+                    <label for="location_">Year</label>
                 </div>
-                <div id="location">
-                    <label>Year:</label>
-                    <select name="location" id="location_input" class="selection" required>
-                        <option value="">-- Select option --</option>
-                        <option value="climate_events_2011_CCC.csv" class="option">2011</option>
-                        <option value="CCC-2018-climate.csv" class="option">2018</option>
-                        <option value="CCC-2020-climate.csv" class="option">2020</option>
-                        <option value="CCC-2021-climate.csv" class="option">2021</option>
-                        
-                    </select>
-                </div>
-                <div id="csv">
-                    <input id="csv_input" type="file" accept=".csv" class="selection" name="csv_input" method="POST" required>
+                <div>
+                    <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
+                    <label for="file_">csv File</label>
                 </div>
             </div>
             <br>
+            <div id="location">
+                <label>Year:</label>
+                <select name="location" id="location_input" class="selection" required>
+                    <option value="">-- Select option --</option>
+                    <option value="climate_events_2011_CCC.csv" class="option">2011</option>
+                    <option value="CCC-2018-climate.csv" class="option">2018</option>
+                    <option value="CCC-2020-climate.csv" class="option">2020</option>
+                    <option value="CCC-2021-climate.csv" class="option">2021</option>
+                </select>
+                <br>
+            </div>
+            <div id="csv">
+                <input id="csv_input" type="file" accept=".csv" class="selection" name="csv_input" method="POST" required>
+                <div class="input-box">
+                    <input type="text" id="file_name" name="file_name" maxlength="30" required method="POST">
+                    <p>File name</p>
+                </div>
+            </div>
             <button type="submit" class="submit" id="submit">Submit</button>
         </div>
     </form>
@@ -181,12 +182,14 @@
             var file = document.getElementById('csv');
             var location = document.getElementById('location');
             var file_ = document.getElementById('csv_input');
+            var file_name = document.getElementById('file_name')
             var location_ = document.getElementById('location_input');
 
             if (document.getElementById('file_').checked){
                 file.style.display = "grid";
                 location.style.display = "none";
                 file_.setAttribute("required", "required");
+                file_name.setAttribute("required", "required");
                 location_.removeAttribute("required");
             }
             else if (document.getElementById('location_').checked) {
@@ -194,6 +197,7 @@
                 file.style.display = "none";
                 location_.setAttribute("required", "required");
                 file_.removeAttribute("required");
+                file_name.removeAttribute("required");
             }
         }
         surface_ty();
