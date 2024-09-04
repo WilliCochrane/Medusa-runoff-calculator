@@ -5,9 +5,8 @@ import sqlite3
 import csv
 import json
 import os
-import random
 
-#filedir = "/home/willicochrane/"
+# filedir = "/home/willicochrane/"
 filedir = ""
 
 app = Flask(__name__, static_folder=filedir+"static")
@@ -262,8 +261,7 @@ def Multi_Event():
         road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
         carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
         return render_template('Multi_Event.html', roof_type=roof_type,
-                            road_type=road_type,
-                            carpark_type=carpark_type)
+                               road_type=road_type, carpark_type=carpark_type)
     else:
         return render_template('needToLogin.html')
 
@@ -274,8 +272,7 @@ def Single_Event():
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
     return render_template('Single_Event.html', roof_type=roof_type,
-                           road_type=road_type,
-                           carpark_type=carpark_type)
+                           road_type=road_type, carpark_type=carpark_type)
 
 
 @app.route('/Single_Event', methods=['POST'])
@@ -302,9 +299,9 @@ def Single_Event_POST():
     data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
     input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
 
-    return render_template('Single_Event.html', roof_type=roof_type, road_type=road_type,
-                            carpark_type=carpark_type, input_data=input_data,
-                            data=data, single=single, graph=graph)
+    return render_template('Single_Event.html', roof_type=roof_type,
+                           road_type=road_type, carpark_type=carpark_type,
+                           input_data=input_data, data=data, single=single, graph=graph)
 
 
 @app.route('/Multi_Event', methods=['POST'])
@@ -315,8 +312,6 @@ def Multi_Event_POST():
         carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
         Area = float(request.form['area'])
         graph = False
-        single = False
-        data = []
         surface = get_surface()[0]
         Type = get_surface()[1]
 
@@ -336,25 +331,26 @@ def Multi_Event_POST():
             filename = secure_filename(csv.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], username + filename)
             userId = do_sql('SELECT id FROM User WHERE username="{}"'.format(username), None)
-            do_sql('INSERT INTO File_data (name, path, file_type, user_id) VALUES (?,?,?,?);', (file_name, username + filename, 1, userId[0]))
+            do_sql('INSERT INTO File_data (name, path, file_type, user_id) VALUES (?,?,?,?);',
+                   (file_name, filepath, 1, userId[0][0]))
             csv.save(filepath)
             if check_file(filepath):
                 file = filepath
             else:
                 os.remove(filepath)
         else:
-            file = filedir + "static/climate_data/" + request.form['location']
+            file = filedir + request.form['location']
 
         data = csv_to_data(file, Area, Type, surface)
         input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
         graph_data = data[0]
-
+        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE 
+                       File_data.user_id=User.id and User.username="{}";'''.format(username), None)
         data_to_csv("static/output/", username, data[1])
         output_data = "/static/output/" + username + ".csv"
         return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
-                            carpark_type=carpark_type, input_data=input_data,
-                            graph=graph, single=single, output_file=output_data,
-                            graph_data=json.dumps(graph_data))
+                            carpark_type=carpark_type, input_data=input_data,graph=graph, 
+                            output_file=output_data, files=files,graph_data=json.dumps(graph_data))
     else:
         return render_template('needToLogin.html')
 
@@ -401,8 +397,7 @@ def Sign_Up_Post():
     if redoPassword != password:
         print("non matching passwords")
         return render_template('SignUp.html', error=True, password_error=True, error_message="Passwords do not match")
-
-    print(username, password, redoPassword, email)
+    
     do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
     return redirect(url_for('Login'))
 

@@ -72,10 +72,13 @@
                 <label>Year:</label>
                 <select name="location" id="location_input" class="selection" required>
                     <option value="">-- Select option --</option>
-                    <option value="climate_events_2011_CCC.csv" class="option">2011</option>
-                    <option value="CCC-2018-climate.csv" class="option">2018</option>
-                    <option value="CCC-2020-climate.csv" class="option">2020</option>
-                    <option value="CCC-2021-climate.csv" class="option">2021</option>
+                    <option value="static/climate_data/climate_events_2011_CCC.csv" class="option">2011</option>
+                    <option value="static/climate_data/CCC-2018-climate.csv" class="option">2018</option>
+                    <option value="static/climate_data/CCC-2020-climate.csv" class="option">2020</option>
+                    <option value="static/climate_data/CCC-2021-climate.csv" class="option">2021</option>
+                    {% for file in files %}
+                    <option value="{{ file[1] }}">{{ file[0] }}</option>
+                    {% endfor %}
                 </select>
                 <br>
             </div>
