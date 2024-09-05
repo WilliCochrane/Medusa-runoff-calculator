@@ -260,7 +260,10 @@ def Multi_Event():
         roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
         road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
         carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-        return render_template('Multi_Event.html', roof_type=roof_type,
+        username = session['username']
+        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
+                       File_data.user_id=User.id and User.username="{}";'''.format(username), None)
+        return render_template('Multi_Event.html', roof_type=roof_type, files=files,
                                road_type=road_type, carpark_type=carpark_type)
     else:
         return render_template('needToLogin.html')
@@ -344,12 +347,12 @@ def Multi_Event_POST():
         data = csv_to_data(file, Area, Type, surface)
         input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
         graph_data = data[0]
-        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE 
+        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
                        File_data.user_id=User.id and User.username="{}";'''.format(username), None)
         data_to_csv("static/output/", username, data[1])
         output_data = "/static/output/" + username + ".csv"
         return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
-                            carpark_type=carpark_type, input_data=input_data,graph=graph, 
+                            carpark_type=carpark_type, input_data=input_data,graph=graph,
                             output_file=output_data, files=files,graph_data=json.dumps(graph_data))
     else:
         return render_template('needToLogin.html')
