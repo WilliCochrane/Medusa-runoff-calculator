@@ -60,7 +60,7 @@
             <div class="year-info">
                 <div>
                     <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
-                    <label for="location_">Year</label>
+                    <label for="location_">Climate data</label>
                 </div>
                 <div>
                     <input class="year_check" type="checkbox" id="file_" name="file_" onclick="onlyOne(this),fy_input()">
@@ -69,13 +69,13 @@
             </div>
             <br>
             <div id="location">
-                <label>Year:</label>
+                <label>Climate data:</label>
                 <select name="location" id="location_input" class="selection" required>
                     <option value="">-- Select option --</option>
-                    <option value="static/climate_data/climate_events_2011_CCC.csv" class="option">2011</option>
-                    <option value="static/climate_data/CCC-2018-climate.csv" class="option">2018</option>
-                    <option value="static/climate_data/CCC-2020-climate.csv" class="option">2020</option>
-                    <option value="static/climate_data/CCC-2021-climate.csv" class="option">2021</option>
+                    <option value="static/climate_data/climate_events_2011_CCC.csv" class="option">Christchurch 2011</option>
+                    <option value="static/climate_data/CCC-2018-climate.csv" class="option">Christchurch 2018</option>
+                    <option value="static/climate_data/CCC-2020-climate.csv" class="option">Christchurch 2020</option>
+                    <option value="static/climate_data/CCC-2021-climate.csv" class="option">Christchurch 2021</option>
                     {% for file in files %}
                     <option value="{{ file[1] }}" class="option">{{ file[0] }}</option>
                     {% endfor %}
