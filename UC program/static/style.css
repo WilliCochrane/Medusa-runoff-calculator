@@ -8,8 +8,9 @@
   color: #edf0f1;
   font-family: "Montserrat", sans-serif;
 }
-form {
-  width: 100%;
+
+html {
+  background-color: #24252A;
 }
 
 b {
@@ -79,10 +80,6 @@ sup {
   font-size: 5px 0 0;
 }
 
-.flex-align {
-  background-color: transparent;
-}
-
 .logo {
   cursor: pointer;
 }
@@ -138,10 +135,20 @@ button:hover {
 }
 
 .flex-align {
+  background-color: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 79vh;
+}
+
+.grid-align {
+  background-color: transparent;
+  justify-content: center;
+  align-items: center;
+  min-height: 79vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .wrapper {
@@ -350,13 +357,12 @@ input::-webkit-inner-spin-button {
 .graph-output {
   margin: auto;
   width: fit-content;
-  max-width: 80vw;
   margin: auto;
 }
 
 .graph-output-container { 
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 5px;
   width: 100%;
   border: 3px solid rgba(237, 240, 241, 0.6);

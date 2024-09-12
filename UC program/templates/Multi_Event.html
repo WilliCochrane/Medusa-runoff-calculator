@@ -1,6 +1,24 @@
 {%extends 'layout.html'%}
 {% block content %}
-    <form action="" method="POST" enctype="multipart/form-data">
+<div class="grid-align">
+    {% if graph %}
+    <div class="output">
+        <div class="output-container">
+            <b>Surface:</b>
+            <p>{{ input_data[0] }}</p>
+            <b>Area:</b>
+            <p>{{ input_data[1] }}m<sup>2</sup></p>
+            <b>Material:</b>
+            <p>{{ input_data[2] }}</p>
+            <a href="{{ output_file }}" download class="output-file">
+                <button type="menu">Data <i class='bx bxs-download'></i></button>
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <br>
+    {% endif %}
+    <form action="" method="POST" enctype="multipart/form-data" autocomplete="off">
         <div class="wrapper">
             <div class="surface">
 
@@ -22,7 +40,7 @@
             </div>
 
             <div class="input-box">
-                <input type="number" id="ME-area" name="area" min=".01" step=".01" required>
+                <input type="number" id="ME-area" name="area" min=".01" maxlength="20" step=".01" required>
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
@@ -92,22 +110,7 @@
             <button type="submit" class="submit" id="submit">Submit</button>
         </div>
     </form>
-    <br>
     {% if graph %}
-        <div class="output">
-            <div class="output-container">
-                <b>Surface:</b>
-                <p>{{ input_data[0] }}</p>
-                <b>Area:</b>
-                <p>{{ input_data[1] }}m<sup>2</sup></p>
-                <b>Material:</b>
-                <p>{{ input_data[2] }}</p>
-                <a href="{{ output_file }}" download class="output-file">
-                    <button type="menu">Data <i class='bx bxs-download'></i></button>
-                </a>
-            </div>
-        </div>
-        <br>
         <div class="graph-output">
             <div class="graph-output-container">
                 <div class="graph">
@@ -127,7 +130,7 @@
             </div>
         </div>
     {% endif %}
-
+</div>
     <script>
         function surface_ty() {
             var road = document.getElementById("road");

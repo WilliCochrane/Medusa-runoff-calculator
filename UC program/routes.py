@@ -240,11 +240,13 @@ def get_user_data(username):
 
 
 def check_email(email):
-    has_at = False
-    for i in email:
-        if i == "@":
-            has_at = True
-        elif i == "." and has_at:
+    at_index = None
+    for i in range(len(email)):
+        if email[i] == "@" and i != 0:
+            if at_index != None:
+                return False
+            at_index = i
+        elif email[i] == "." and at_index+1 < i and len(email) > i+1:
             return True
     return False
 
@@ -402,6 +404,10 @@ def Sign_Up_Post():
         print("Invalid email address")
         return render_template('SignUp.html', error=True, email_error=True, error_message="Invalid email address")
 
+    if len(password) < 8:
+        print('password too short')
+        return render_template('SignUp.html', error=True, password_error=True, error_message="Password is less than 8 characters")
+        
     if redoPassword != password:
         print("non matching passwords")
         return render_template('SignUp.html', error=True, password_error=True, error_message="Passwords do not match")
