@@ -388,11 +388,16 @@ def Sign_Up_Post():
     email = request.form['email']
 
     unavalableUsernames = do_sql('SELECT username FROM User;', None)
+
+    if len(username) < 6:
+        print("username too short")
+        return render_template('SignUp.html', error=True, username_error=True, error_message="Username has to be at least 6 characters")
+    
     for name in unavalableUsernames:
         if username == name[0]:
             print("unavalable username")
-            return render_template('SignUp.html', error=True, username_error=True, error_message="Unavalable username")
-
+            return render_template('SignUp.html', error=True, username_error=True, error_message="Unavalable already exists")
+    
     if not check_email(email):
         print("Invalid email address")
         return render_template('SignUp.html', error=True, email_error=True, error_message="Invalid email address")
