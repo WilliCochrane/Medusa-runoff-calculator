@@ -44,8 +44,8 @@
                 
             </div>
             <div class="input-box">
-                <input type="number" id="SE-area" 
-                name="area" min=".01" step=".01" required>
+                <input type="text" id="SE-area" value='' onpaste="return false"
+                name="area" required maxlength="30">
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
@@ -83,27 +83,27 @@
                 </div>
             </div>
             <div class="input-box">
-                <input type="number" id="ADDipt" 
-                name="ADD" min=".01" step=".01" value='' onpaste="return false" required>
+                <input type="text" id="ADDipt" 
+                name="ADD" value='' onpaste="return false" required maxlength="25">
                 <p>ADD</p>
                 <i class="suffix">day</i>
             </div>
             
             <div class="input-box">
-                <input class="" type="number" id="INTipt" 
-                name="INT" min=".01" step=".01" value='' onpaste="return false" required>
+                <input class="" type="text" id="INTipt" 
+                name="INT" value='' onpaste="return false" required maxlength="25">
                 <p>Intensity</p>
                 <i class="suffix">mm/h</i>
             </div>
             <div class="input-box">
-                <input type="number" id="DURipt" 
-                name="DUR" min=".01" step=".01" value='' onpaste="return false" required>
+                <input type="text" id="DURipt" 
+                name="DUR" value='' onpaste="return false" required maxlength="25">
                 <p>Duration</p>
                 <i class="suffix">h</i>
             </div>
             <div class="input-box">
-                <input type="number" id="PHipt" 
-                name="PH" min="0" step=".01" value='' onpaste="return false" required>
+                <input type="text" id="PHipt" 
+                name="PH" min="0" value='' onpaste="return false" required maxlength="25">
                 <p>pH</p>
             </div>
             <button type="submit" class="submit" id="submit">Submit</button>
@@ -186,29 +186,86 @@
     }
     surface_ty();
 
+
     document.getElementById("SE-area").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
-        if ("-".indexOf(chr) >= 0)
+        if ("0123456789".indexOf(chr) >= 0) {
+            return true;
+        }
+        else if (".".indexOf(chr) >= 0) {
+            if (document.getElementById("SE-area").value.indexOf(".") >= 0) {
+                return false;
+            }
+            else 
+                return true;
+        }
+        else
             return false;
     };
+
     document.getElementById("ADDipt").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
-        if ("-".indexOf(chr) >= 0)
+        if ("0123456789".indexOf(chr) >= 0)
+            return true;
+        if (".".indexOf(chr) >= 0) {
+            if (document.getElementById("ADDipt").value.indexOf(".") >= 0){
+                return false;
+            }
+            else 
+                return true;
+        }
+        else
             return false;
     };
+
     document.getElementById("INTipt").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
-        if ("-".indexOf(chr) >= 0)
+        if ("0123456789".indexOf(chr) >= 0) {
+            return true;
+        }
+        else if (".".indexOf(chr) >= 0) {
+            if (document.getElementById("INTipt").value.indexOf(".") >= 0) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else
             return false;
     };
+
     document.getElementById("DURipt").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
-        if ("-".indexOf(chr) >= 0)
+        if ("0123456789".indexOf(chr) >= 0) {
+            return true;
+        }
+        else if (".".indexOf(chr) >= 0) {
+            if (document.getElementById("DURipt").value.indexOf(".") >= 0) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else
             return false;
     };
+
     document.getElementById("PHipt").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
-        if ("-".indexOf(chr) >= 0)
+        if ("0123456789".indexOf(chr) >= 0) {
+            return true;
+        }
+        else if (".".indexOf(chr) >= 0) {
+            if (document.getElementById("PHipt").value.indexOf(".") >= 0) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else
             return false;
     };
 

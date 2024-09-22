@@ -157,16 +157,17 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 def csv_to_data(fileDir, Area, Type, surface):
     #  Reads csv file and calculates 
     with open(fileDir, newline='') as csvfile:
-        graphData = [[], [], [], []]
-        outputData = []
+        graphData = [[], [], [], []] #  Data used for graph
+        outputData = [] #  Data used for output csv file
         fileReader = csv.reader(csvfile)
-
+        fileLength = 0
         TSSTotal = 0
         TZnTotal = 0
         TCuTotal = 0
 
         for row in fileReader:
             if row[0].isnumeric():
+                fileLength += 1
                 runoff = calculateRunoff(Area, float(row[2]), float(row[3]),
                                          float(row[4]), float(row[1]), Type, surface) #  Calculates data
                 try:
@@ -182,8 +183,9 @@ def csv_to_data(fileDir, Area, Type, surface):
                 TZnTotal += runoff[1]
                 TCuTotal += runoff[3]
         
-        
-        
+        outputData.append(['',['']])
+        outputData.append(['Average:', [str(rounded(TSSTotal/fileLength, 5))+'mg', str(rounded(TZnTotal/fileLength, 5))+'mg', str(rounded(TCuTotal/fileLength, 5))+'mg']])
+        outputData.append(['Total:', [str(rounded(TSSTotal, 5))+'mg', str(rounded(TZnTotal, 5))+'mg', str(rounded(TCuTotal, 5))+'mg']])
 
     return [graphData, outputData]
 
@@ -300,8 +302,6 @@ def Single_Event_POST():
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
     Area = float(request.form['area'])
-    graph = False
-    single = False
     data = []
     surface = get_surface()[0]
     Type = get_surface()[1]
@@ -309,24 +309,28 @@ def Single_Event_POST():
     surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
                             Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
 
-    # Single event simulation
-    ADD = float(request.form['ADD'])
-    INT = float(request.form['INT'])
-    DUR = float(request.form['DUR'])
-    PH = float(request.form['PH'])
+    try:
+        ADD = float(request.form['ADD'])
+        INT = float(request.form['INT'])
+        DUR = float(request.form['DUR'])
+        PH = float(request.form['PH'])
 
-    if PH > 7.1 or PH < 4:
+        if PH > 7.1 or PH < 4:
+            return render_template('Single_Event.html', roof_type=roof_type,
+                                road_type=road_type, carpark_type=carpark_type,
+                                error=True, error_message="pH isn't between 4 and 7.1")
+
+        single = True
+        data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
+        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
+
         return render_template('Single_Event.html', roof_type=roof_type,
-                               road_type=road_type, carpark_type=carpark_type,
-                               error=True, error_message="pH isn't between 4 and 7.1")
-
-    single = True
-    data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
-    input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
-
-    return render_template('Single_Event.html', roof_type=roof_type,
-                           road_type=road_type, carpark_type=carpark_type,
-                           input_data=input_data, data=data, single=single, graph=graph)
+                            road_type=road_type, carpark_type=carpark_type,
+                            input_data=input_data, data=data, single=single)
+    except:
+        return render_template('Single_Event.html', roof_type=roof_type,
+                            road_type=road_type, carpark_type=carpark_type,
+                            error=True, error_message="Invalid data")
 
 
 @app.route('/Multi_Event', methods=['POST'])
@@ -336,20 +340,22 @@ def Multi_Event_POST():
         road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
         carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
         Area = float(request.form['area'])
-        graph = False
         surface = get_surface()[0]
         Type = get_surface()[1]
-        #  Gats the name of the correct surface and type
-        surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
-                                Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
-
-        # Full year simulation
         graph = True
         file = None
         surface = get_surface()[0]
         Type = get_surface()[1]
         username = session['username']
+        #  Gats the name of the correct surface and type
+        surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
+                                Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
+        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
+                           File_data.file_type=1 and File_data.user_id=User.id and User.username="{}";'''.format(username), None)
 
+        if Area <=0:
+            return render_template('Multi_Event.html', error=True, error_message="Area can't be < or = 0",
+                                   roof_type=roof_type, files=files, road_type=road_type, carpark_type=carpark_type)
         #  If file uploaded
         if request.form.get('file_') == 'on':
             file_name = request.form['file_name']
@@ -365,7 +371,7 @@ def Multi_Event_POST():
                 do_sql('INSERT INTO File_data (name, path, file_type, user_id) VALUES (?,?,?,?);',
                       (file_name, filepath, 1, userId[0][0]))
             else:
-                #  If file isn't valid then remove it
+                #  If file isn't valid then delete it
                 os.remove(filepath)
         else:
             file = filedir + request.form['location']
@@ -374,16 +380,12 @@ def Multi_Event_POST():
             data = csv_to_data(file, Area, Type, surface)
             input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
             graph_data = data[0]
-            files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
-                           File_data.file_type=1 and File_data.user_id=User.id and User.username="{}";'''.format(username), None)
             data_to_csv("static/output/", username, data[1])
             output_data = "/static/output/" + username + ".csv"
             return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
                                 carpark_type=carpark_type, input_data=input_data,graph=graph,
                                 output_file=output_data, files=files,graph_data=json.dumps(graph_data))
         else: 
-            files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
-                           File_data.file_type=1 and File_data.user_id=User.id and User.username="{}";'''.format(username), None)
             #  Throws an error if there is a problem with the file
             return render_template('Multi_Event.html', error=True, error_message='File Error',
                                    roof_type=roof_type, files=files, road_type=road_type, carpark_type=carpark_type)

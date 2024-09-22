@@ -41,7 +41,7 @@
             </div>
 
             <div class="input-box">
-                <input type="number" id="ME-area" name="area" min=".01" maxlength="30" step=".01" value='' onpaste="return false" required >
+                <input type="text" id="ME-area" name="area" min=".01" maxlength="30" step=".01" value='' onpaste="return false" required >
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
@@ -178,7 +178,6 @@
             }
         }
 
-
         function onlyOne(checkbox) {
             var checkboxes = document.getElementsByClassName(checkbox.className);
             for (let i = 0; i < checkboxes.length;i++) {
@@ -216,11 +215,29 @@
         surface_ty();
         fy_input();
 
+        document.getElementById("file_name").onkeypress = function(e) {
+        var chr = String.fromCharCode(e.which);
+        if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".indexOf(chr) >= 0)
+            return true;
+        else 
+            return false;
+    };
+
         document.getElementById("ME-area").onkeypress = function(e) {
-            var chr = String.fromCharCode(e.which);
-            if ("-".indexOf(chr) >= 0)
+        var chr = String.fromCharCode(e.which);
+        if ("0123456789".indexOf(chr) >= 0) {
+            return true;
+        }
+        else if (".".indexOf(chr) >= 0) {
+            if (document.getElementById("ME-area").value.indexOf(".") >= 0) {
                 return false;
-        };
+            }
+            else 
+                return true;
+        }
+        else
+            return false;
+    };
     </script>
 
     <script>
