@@ -24,7 +24,8 @@
         </div>
         <br>
         {% endif %}
-        <div class="wrapper">
+        <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
+            <p class="error">{{ error_message }}</p><br>
             <div class="surface">
                 <label class="check-container">Roof
                 <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty()" checked>
@@ -48,54 +49,61 @@
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
-            <label>Material type:</label>
-            <div id="roof">
+            <div id="roof" class="select-container">
                 <select name="roof_type" id="roof_type" class="selection" method="POST" required>
-                    <option value="">-- Select option --</option>
+                    <option value="">-- Select Material --</option>
                     {% for type in roof_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                     {% endfor %}
                 </select>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
             </div>
-            <div id="road" style="display: none;">
+            <div id="road" style="display: none;" class="select-container">
                 <select name="road_type" id="road_type" class="selection" method="POST" required>
-                    <option value="">-- Select option --</option>
+                    <option value="">-- Select Material --</option>
                     {% for type in road_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                     {% endfor %}
                 </select>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
             </div>
-            <div id="carpark" style="display: none;">
+            <div id="carpark" style="display: none;" class="select-container">
                 <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
-                    <option value="">-- Select option --</option>
+                    <option value="">-- Select Material --</option>
                     {% for type in carpark_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                     {% endfor %}
                 </select>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
             </div>
-            <br>
             <div class="input-box">
                 <input type="number" id="ADDipt" 
-                name="ADD" min=".01" step=".01" required>
+                name="ADD" min=".01" step=".01" value='' onpaste="return false" required>
                 <p>ADD</p>
                 <i class="suffix">day</i>
             </div>
             
             <div class="input-box">
                 <input class="" type="number" id="INTipt" 
-                name="INT" min=".01" step=".01" required>
+                name="INT" min=".01" step=".01" value='' onpaste="return false" required>
                 <p>Intensity</p>
                 <i class="suffix">mm/h</i>
             </div>
             <div class="input-box">
                 <input type="number" id="DURipt" 
-                name="DUR" min=".01" step=".01" required>
+                name="DUR" min=".01" step=".01" value='' onpaste="return false" required>
                 <p>Duration</p>
                 <i class="suffix">h</i>
             </div>
             <div class="input-box">
                 <input type="number" id="PHipt" 
-                name="PH" min="0" step=".01" required>
+                name="PH" min="0" step=".01" value='' onpaste="return false" required>
                 <p>pH</p>
             </div>
             <button type="submit" class="submit" id="submit">Submit</button>
@@ -143,21 +151,21 @@
         var roof_type = document.getElementById("roof_type");
         var carpark_type = document.getElementById("carpark_type");
         if (document.getElementById("roof_").checked) {
-            roof.style.display = "block";
+            roof.style.display = "flex";
             road.style.display = "none";
             carpark.style.display = "none";
             road_type.removeAttribute("required");
             roof_type.setAttribute("required", "required");
             carpark_type.removeAttribute("required");
         } else if (document.getElementById("road_").checked) {
-            road.style.display = "block";
+            road.style.display = "flex";
             roof.style.display = "none";
             carpark.style.display = "none";
             road_type.setAttribute("required", "required");
             roof_type.removeAttribute("required");
             carpark_type.removeAttribute("required");
         } else if (document.getElementById("carpark_").checked) {
-            carpark.style.display = "block";
+            carpark.style.display = "flex";
             roof.style.display = "none";
             road.style.display = "none";
             road_type.removeAttribute("required");
@@ -177,5 +185,32 @@
         }
     }
     surface_ty();
+
+    document.getElementById("SE-area").onkeypress = function(e) {
+        var chr = String.fromCharCode(e.which);
+        if ("-".indexOf(chr) >= 0)
+            return false;
+    };
+    document.getElementById("ADDipt").onkeypress = function(e) {
+        var chr = String.fromCharCode(e.which);
+        if ("-".indexOf(chr) >= 0)
+            return false;
+    };
+    document.getElementById("INTipt").onkeypress = function(e) {
+        var chr = String.fromCharCode(e.which);
+        if ("-".indexOf(chr) >= 0)
+            return false;
+    };
+    document.getElementById("DURipt").onkeypress = function(e) {
+        var chr = String.fromCharCode(e.which);
+        if ("-".indexOf(chr) >= 0)
+            return false;
+    };
+    document.getElementById("PHipt").onkeypress = function(e) {
+        var chr = String.fromCharCode(e.which);
+        if ("-".indexOf(chr) >= 0)
+            return false;
+    };
+
 </script>
 {% endblock %}

@@ -1,36 +1,38 @@
 from flask import Flask, request, render_template, session, redirect, url_for
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor
+import hashlib
 import sqlite3
 import csv
 import json
 import os
 
-# filedir = "/home/willicochrane/"
+# This bellow is just for ease of use with pythonanywhere
+#filedir = "/home/willicochrane/"
 filedir = ""
 
-app = Flask(__name__, static_folder=filedir+"static")
+app = Flask(__name__, static_folder=filedir+"static") 
 UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
+app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*' #  No looking
 
 
 def do_sql(sql, values):
     db = sqlite3.connect('Coefficients.db')
     cur = db.cursor()
-    if values is not None:
+    if values is not None: #  If the value isn't none then the change will be commited to the database
         cur.execute(sql, values)
         db.commit()
     else:
-        cur.execute(sql)
+        cur.execute(sql) #  If value is none then the changes will just be executed
     return cur.fetchall()
 
 
 def rounded(num, sf):
-    return round(num, sf-int(floor(log10(abs(num))))-1)
+    return round(num, sf-int(floor(log10(abs(num))))-1) #  rounds num to sf number of s.f 
 
 
-def getConcentration(volume, mass):
+def getConcentration(volume, mass): #  Calculates concentration
     return volume/mass
 
 
@@ -153,16 +155,22 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
 
 
 def csv_to_data(fileDir, Area, Type, surface):
+    #  Reads csv file and calculates 
     with open(fileDir, newline='') as csvfile:
         graphData = [[], [], [], []]
         outputData = []
         fileReader = csv.reader(csvfile)
+
+        TSSTotal = 0
+        TZnTotal = 0
+        TCuTotal = 0
+
         for row in fileReader:
             if row[0].isnumeric():
                 runoff = calculateRunoff(Area, float(row[2]), float(row[3]),
-                                         float(row[4]), float(row[1]), Type, surface)
+                                         float(row[4]), float(row[1]), Type, surface) #  Calculates data
                 try:
-                    graphData[0].append(row[5])
+                    graphData[0].append(row[5]) #  If a date is provided then it will use the date instead of the event number
                     outputData.append([row[5], runoff])
                 except:
                     graphData[0].append(row[0])
@@ -170,6 +178,12 @@ def csv_to_data(fileDir, Area, Type, surface):
                 graphData[1].append(runoff[0])
                 graphData[2].append(runoff[1])
                 graphData[3].append(runoff[3])
+                TSSTotal += runoff[0]
+                TZnTotal += runoff[1]
+                TCuTotal += runoff[3]
+        
+        
+        
 
     return [graphData, outputData]
 
@@ -179,10 +193,10 @@ def check_file(filepath):
         fileReader = csv.reader(csvfile)
         try:
             for row in fileReader:
-                if len(row) < 5 or len(row) > 6:
+                if len(row) < 5 or len(row) > 6: #  checks number of collums is correct
                     return False
                 for i in range(len(row)):
-                    if row[i].isnumeric():
+                    if row[i].isnumeric(): #  checks if the data is numbers
                         if float(row[i]) <= 0:
                             return False
             return True
@@ -300,6 +314,12 @@ def Single_Event_POST():
     INT = float(request.form['INT'])
     DUR = float(request.form['DUR'])
     PH = float(request.form['PH'])
+
+    if PH > 7.1 or PH < 4:
+        return render_template('Single_Event.html', roof_type=roof_type,
+                               road_type=road_type, carpark_type=carpark_type,
+                               error=True, error_message="pH isn't between 4 and 7.1")
+
     single = True
     data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
     input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
@@ -319,43 +339,54 @@ def Multi_Event_POST():
         graph = False
         surface = get_surface()[0]
         Type = get_surface()[1]
-
+        #  Gats the name of the correct surface and type
         surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM Coefficient,Site_type WHERE 
                                 Coefficient.type=Site_type.id and Coefficient.id='{}'""".format(int(Type)), None)
 
         # Full year simulation
         graph = True
-        file = filedir + "static/climate_data/climate_events_2011_CCC.csv"
+        file = None
         surface = get_surface()[0]
         Type = get_surface()[1]
         username = session['username']
 
+        #  If file uploaded
         if request.form.get('file_') == 'on':
             file_name = request.form['file_name']
             csv = request.files['csv_input']
             filename = secure_filename(csv.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], username + filename)
-            userId = do_sql('SELECT id FROM User WHERE username="{}"'.format(username), None)
-            do_sql('INSERT INTO File_data (name, path, file_type, user_id) VALUES (?,?,?,?);',
-                   (file_name, filepath, 1, userId[0][0]))
             csv.save(filepath)
-            if check_file(filepath):
+            if check_file(filepath): #  Checks if file is valid
+                #  If file is valid then assigns filepath of the input file as file
                 file = filepath
+                #  Adds the filepath under the user in the database
+                userId = do_sql('SELECT id FROM User WHERE username="{}"'.format(username), None)
+                do_sql('INSERT INTO File_data (name, path, file_type, user_id) VALUES (?,?,?,?);',
+                      (file_name, filepath, 1, userId[0][0]))
             else:
+                #  If file isn't valid then remove it
                 os.remove(filepath)
         else:
             file = filedir + request.form['location']
 
-        data = csv_to_data(file, Area, Type, surface)
-        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
-        graph_data = data[0]
-        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
-                       File_data.file_type=1 and File_data.user_id=User.id and User.username="{}";'''.format(username), None)
-        data_to_csv("static/output/", username, data[1])
-        output_data = "/static/output/" + username + ".csv"
-        return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
-                            carpark_type=carpark_type, input_data=input_data,graph=graph,
-                            output_file=output_data, files=files,graph_data=json.dumps(graph_data))
+        if file != None:
+            data = csv_to_data(file, Area, Type, surface)
+            input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
+            graph_data = data[0]
+            files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
+                           File_data.file_type=1 and File_data.user_id=User.id and User.username="{}";'''.format(username), None)
+            data_to_csv("static/output/", username, data[1])
+            output_data = "/static/output/" + username + ".csv"
+            return render_template('Multi_Event.html', roof_type=roof_type, road_type=road_type,
+                                carpark_type=carpark_type, input_data=input_data,graph=graph,
+                                output_file=output_data, files=files,graph_data=json.dumps(graph_data))
+        else: 
+            files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
+                           File_data.file_type=1 and File_data.user_id=User.id and User.username="{}";'''.format(username), None)
+            #  Throws an error if there is a problem with the file
+            return render_template('Multi_Event.html', error=True, error_message='File Error',
+                                   roof_type=roof_type, files=files, road_type=road_type, carpark_type=carpark_type)
     else:
         return render_template('needToLogin.html')
 
@@ -368,7 +399,7 @@ def Login():
 @app.route('/Login', methods=['POST'])
 def Login_Post():
     username = request.form['username']
-    password = request.form['password']
+    password = hashlib.sha256(request.form['password'].encode('utf-8')).hexdigest()
     users = do_sql('SELECT * FROM User', None)
     for user in users:
         if str(username) == str(user[1]) and str(password) == str(user[2]):
@@ -411,8 +442,7 @@ def Sign_Up_Post():
     if redoPassword != password:
         print("non matching passwords")
         return render_template('SignUp.html', error=True, password_error=True, error_message="Passwords do not match")
-    
-    do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, password, email))
+    do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);', (username, hashlib.sha256(password.encode('utf-8')).hexdigest() , email))
     return redirect(url_for('Login'))
 
 

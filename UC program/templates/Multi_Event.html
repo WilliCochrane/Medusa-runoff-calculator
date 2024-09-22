@@ -19,7 +19,8 @@
     <br>
     {% endif %}
     <form action="" method="POST" enctype="multipart/form-data" autocomplete="off">
-        <div class="wrapper">
+        <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
+            <p class="error">{{ error_message }}</p><br>
             <div class="surface">
 
                 <label class="check-container">Roof
@@ -40,41 +41,46 @@
             </div>
 
             <div class="input-box">
-                <input type="number" id="ME-area" name="area" min=".01" maxlength="20" step=".01" required>
+                <input type="number" id="ME-area" name="area" min=".01" maxlength="30" step=".01" value='' onpaste="return false" required >
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
 
-            <label>Material type:</label>
-
-            <div id="roof">
+            <div id="roof" class="select-container">
                 <select name="roof_type" id="roof_type" class="selection" method="POST" required>
-                    <option value="">-- Select option --</option>
+                    <option value="">-- Select Material --</option>
                     {% for type in roof_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                     {% endfor %}
                 </select>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
             </div>
 
-            <div id="road" style="display: none;">
+            <div id="road" style="display: none;" class="select-container">
                 <select name="road_type" id="road_type" class="selection" method="POST" required>
-                    <option value="">-- Select option --</option>
+                    <option value="">-- Select Material --</option>
                     {% for type in road_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                     {% endfor %}
                 </select>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
             </div>
 
-            <div id="carpark" style="display: none;">
+            <div id="carpark" style="display: none;" class="select-container">
                 <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
-                    <option value="">-- Select option --</option>
+                    <option value="">-- Select Material --</option>
                     {% for type in carpark_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
                     {% endfor %}
                 </select>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
             </div>
-
-            <br> 
             <div class="year-info">
                 <div>
                     <input class="year_check" type="checkbox" id="location_" name="location_" onclick="onlyOne(this),fy_input()" checked>
@@ -85,11 +91,9 @@
                     <label for="file_">csv File</label>
                 </div>
             </div>
-            <br>
-            <div id="location">
-                <label>Climate data:</label>
+            <div id="location" class="select-container">
                 <select name="location" id="location_input" class="selection" required>
-                    <option value="">-- Select option --</option>
+                    <option value="">-- Select Climate Data --</option>
                     <option value="static/climate_data/climate_events_2011_CCC.csv" class="option">Christchurch 2011</option>
                     <option value="static/climate_data/CCC-2018-climate.csv" class="option">Christchurch 2018</option>
                     <option value="static/climate_data/CCC-2020-climate.csv" class="option">Christchurch 2020</option>
@@ -98,10 +102,13 @@
                     <option value="{{ file[1] }}" class="option">{{ file[0] }}</option>
                     {% endfor %}
                 </select>
-                <br>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
             </div>
             <div id="csv">
-                <input id="csv_input" type="file" accept=".csv" class="selection" name="csv_input" method="POST" required>
+                <br>
+                <input id="csv_input" type="file" accept=".csv" name="csv_input" method="POST" required>
                 <div class="input-box">
                     <input type="text" id="file_name" name="file_name" maxlength="30" required method="POST">
                     <p>File name</p>
@@ -141,7 +148,7 @@
             var roof_type = document.getElementById("roof_type");
             var carpark_type = document.getElementById("carpark_type");
             if (document.getElementById("roof_").checked) {
-                roof.style.display = "block";
+                roof.style.display = "flex";
                 road.style.display = "none";
                 carpark.style.display = "none";
 
@@ -149,7 +156,7 @@
                 roof_type.setAttribute("required", "required");
                 carpark_type.removeAttribute("required");
             } else if (document.getElementById("road_").checked) {
-                road.style.display = "block";
+                road.style.display = "flex";
                 roof.style.display = "none";
                 carpark.style.display = "none";
 
@@ -157,7 +164,7 @@
                 roof_type.removeAttribute("required");
                 carpark_type.removeAttribute("required");
             } else if (document.getElementById("carpark_").checked) {
-                carpark.style.display = "block";
+                carpark.style.display = "flex";
                 roof.style.display = "none";
                 road.style.display = "none";
 
@@ -199,7 +206,7 @@
                 location_.removeAttribute("required");
             }
             else if (document.getElementById('location_').checked) {
-                location.style.display = "grid";
+                location.style.display = "flex";
                 file.style.display = "none";
                 location_.setAttribute("required", "required");
                 file_.removeAttribute("required");
@@ -208,6 +215,12 @@
         }
         surface_ty();
         fy_input();
+
+        document.getElementById("ME-area").onkeypress = function(e) {
+            var chr = String.fromCharCode(e.which);
+            if ("-".indexOf(chr) >= 0)
+                return false;
+        };
     </script>
 
     <script>

@@ -4,7 +4,7 @@
         <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
             <form action="" method="POST" enctype="multipart/form-data">
                 <h1>Sign Up</h1>
-                <div class="input-box" {% if username_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
+                <div class="input-box" {% if username_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %} value='' onpaste="return false">
                     <input type="text" id="SignUp-username" 
                     name="username" required maxlength="25">
                     <p>Username</p>
@@ -45,4 +45,13 @@
             </form>
         </div>
     </div>
+    <script>
+        document.getElementById("SignUp-username").onkeypress = function(e) {
+            var chr = String.fromCharCode(e.which);
+            if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".indexOf(chr) >= 0)
+                return true;
+            else 
+                return false;
+        };
+    </script>
 {% endblock %}
