@@ -311,7 +311,6 @@ def Single_Event_POST():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-    Area = float(request.form['area'])
     data = []
     surface = get_surface()[0]
     Type = get_surface()[1]
@@ -322,6 +321,7 @@ def Single_Event_POST():
                             Coefficient.id='{}'""".format(int(Type)), None)
 
     try:
+        Area = float(request.form['area'])
         ADD = float(request.form['ADD'])
         INT = float(request.form['INT'])
         DUR = float(request.form['DUR'])
@@ -351,7 +351,14 @@ def Multi_Event_POST():
         roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
         road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
         carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-        Area = float(request.form['area'])
+        try:
+            Area = float(request.form['area'])
+        except:
+            return render_template('Multi_Event.html', error=True,
+                                   error_message='Invalid data',
+                                   roof_type=roof_type, files=files,
+                                   road_type=road_type,
+                                   carpark_type=carpark_type)
         surface = get_surface()[0]
         Type = get_surface()[1]
         graph = True
