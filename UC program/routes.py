@@ -254,6 +254,13 @@ def check_login():
         return False
 
 
+def get_login_text():
+    if check_login():
+        return 'Logout'
+    else:
+        return 'Login'
+
+
 def get_user_data(username):
     userFiles = do_sql('''SELECT * FROM File_data Where File_data.id =
                        User_File_data.File_data_id AND
@@ -278,7 +285,7 @@ def check_email(email):  # checks if email has an @ then a . at least 1 characte
 
 @app.route('/')
 def Home_Page():
-    return render_template('index.html')
+    return render_template('index.html', login_text=get_login_text())
 
 
 @app.route('/Multi_Event')
@@ -292,9 +299,9 @@ def Multi_Event():
                        File_data.file_type=1 and File_data.user_id=User.id and
                        User.username="{}";'''.format(username), None)
         return render_template('Multi_Event.html', roof_type=roof_type, files=files,
-                               road_type=road_type, carpark_type=carpark_type)
+                               road_type=road_type, carpark_type=carpark_type, login_text=get_login_text())
     else:
-        return render_template('needToLogin.html')
+        return render_template('needToLogin.html', login_text=get_login_text())
 
 
 @app.route('/Single_Event')
@@ -302,8 +309,10 @@ def Single_Event():
     roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
     road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
     carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+    
     return render_template('Single_Event.html', roof_type=roof_type,
-                           road_type=road_type, carpark_type=carpark_type)
+                           road_type=road_type, carpark_type=carpark_type,
+                           login_text=get_login_text())
 
 
 @app.route('/Single_Event', methods=['POST'])
@@ -330,7 +339,8 @@ def Single_Event_POST():
         if PH > 7.1 or PH < 4:
             return render_template('Single_Event.html', roof_type=roof_type,
                                    road_type=road_type, carpark_type=carpark_type,
-                                   error=True, error_message="pH isn't between 4 and 7.1")
+                                   error=True, error_message="pH isn't between 4 and 7.1",
+                                   login_text=get_login_text())
 
         single = True
         data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
@@ -338,11 +348,13 @@ def Single_Event_POST():
 
         return render_template('Single_Event.html', roof_type=roof_type,
                                road_type=road_type, carpark_type=carpark_type,
-                               input_data=input_data, data=data, single=single)
+                               input_data=input_data, data=data, single=single,
+                               login_text=get_login_text())
     except:
         return render_template('Single_Event.html', roof_type=roof_type,
                                road_type=road_type, carpark_type=carpark_type,
-                               error=True, error_message="Invalid data")
+                               error=True, error_message="Invalid data",
+                               login_text=get_login_text())
 
 
 @app.route('/Multi_Event', methods=['POST'])
@@ -358,7 +370,8 @@ def Multi_Event_POST():
                                    error_message='Invalid data',
                                    roof_type=roof_type, files=files,
                                    road_type=road_type,
-                                   carpark_type=carpark_type)
+                                   carpark_type=carpark_type,
+                                   login_text=get_login_text())
         surface = get_surface()[0]
         Type = get_surface()[1]
         graph = True
@@ -380,7 +393,8 @@ def Multi_Event_POST():
             return render_template('Multi_Event.html', error=True,
                                    error_message="Area can't be < or = 0",
                                    roof_type=roof_type, files=files,
-                                   road_type=road_type, carpark_type=carpark_type)
+                                   road_type=road_type, carpark_type=carpark_type,
+                                   login_text=get_login_text())
         #  If file uploaded
         if request.form.get('file_') == 'on':
             file_name = request.form['file_name']
@@ -414,21 +428,23 @@ def Multi_Event_POST():
                                    carpark_type=carpark_type,
                                    input_data=input_data, graph=graph,
                                    output_file=output_data, files=files,
-                                   graph_data=json.dumps(graph_data))
+                                   graph_data=json.dumps(graph_data),
+                                   login_text=get_login_text())
         else:
             #  Throws an error if there is a problem with the file
             return render_template('Multi_Event.html', error=True,
                                    error_message='File Error',
                                    roof_type=roof_type, files=files,
                                    road_type=road_type,
-                                   carpark_type=carpark_type)
+                                   carpark_type=carpark_type,
+                                   login_text=get_login_text())
     else:
-        return render_template('needToLogin.html')
+        return render_template('needToLogin.html', login_text=get_login_text())
 
 
 @app.route('/Login')
 def Login():
-    return render_template('Login.html')
+    return render_template('Login.html', login_text=get_login_text())
 
 
 @app.route('/Login', methods=['POST'])
@@ -440,12 +456,12 @@ def Login_Post():
         if str(username) == str(user[1]) and str(password) == str(user[2]):
             session['username'] = username
             return redirect(url_for('Home_Page'))
-    return render_template('Login.html', error=True)
+    return render_template('Login.html', error=True, login_text=get_login_text())
 
 
 @app.route('/SignUp')
 def Sign_Up():
-    return render_template('SignUp.html', error=False)
+    return render_template('SignUp.html', error=False, login_text=get_login_text())
 
 
 @app.route('/SignUp', methods=['POST'])
@@ -460,29 +476,34 @@ def Sign_Up_Post():
     if len(username) < 6:
         print("username too short")
         return render_template('SignUp.html', error=True, username_error=True,
-                               error_message="Username has to be at least 6 characters")
+                               error_message="Username has to be at least 6 characters",
+                               login_text=get_login_text())
 
     for name in unavalableUsernames:
         if username == name[0]:
             print("unavalable username")
             return render_template('SignUp.html', error=True,
                                    username_error=True,
-                                   error_message="Username already exists")
+                                   error_message="Username already exists",
+                                   login_text=get_login_text())
 
     if not check_email(email):
         print("Invalid email address")
         return render_template('SignUp.html', error=True, email_error=True,
-                               error_message="Invalid email address")
+                               error_message="Invalid email address",
+                               login_text=get_login_text())
 
     if len(password) < 8:
         print('password too short')
         return render_template('SignUp.html', error=True, password_error=True,
-                               error_message="Password is less than 8 characters")
+                               error_message="Password is less than 8 characters",
+                               login_text=get_login_text())
 
     if redoPassword != password:
         print("non matching passwords")
         return render_template('SignUp.html', error=True, password_error=True,
-                               error_message="Passwords do not match")
+                               error_message="Passwords do not match",
+                               login_text=get_login_text())
     do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);',
            (username, hashlib.sha256(password.encode('utf-8')).hexdigest(), email))
     return redirect(url_for('Login'))
@@ -490,12 +511,12 @@ def Sign_Up_Post():
 
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
-    return render_template('404page.html')
+    return render_template('404page.html', login_text=get_login_text())
 
 
 @app.errorhandler(500)
 def Server_error(error):
-    return render_template('500 page')
+    return render_template('500 page', login_text=get_login_text())
 
 
 if __name__ == "__main__":  # Last lines
