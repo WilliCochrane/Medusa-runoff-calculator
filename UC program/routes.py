@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, session, redirect, url_for
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor
+from random import randrange
 import hashlib
 import sqlite3
 import csv
@@ -17,7 +18,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'  # No looking
 
 
-def do_sql(sql, values):
+def do_sql(sql, values) -> list:
     db = sqlite3.connect('Coefficients.db')
     cur = db.cursor()
     if values is not None:  # If the value isn't none then the change will be commited to the database
@@ -28,15 +29,15 @@ def do_sql(sql, values):
     return cur.fetchall()
 
 
-def rounded(num, sf):
+def rounded(num, sf) -> float:
     return round(num, sf-int(floor(log10(abs(num))))-1)  # rounds num to sf number of s.f
 
 
-def getConcentration(volume, mass):  # Calculates concentration
+def getConcentration(volume, mass) -> float:  # Calculates concentration
     return volume/mass
 
 
-def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
+def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface) -> list:
     coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)), None)
     # The variables below are named like that in the fomulas I was provided
     # TSS Coefficients
@@ -155,7 +156,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface):
     return data
 
 
-def csv_to_data(fileDir, Area, Type, surface):
+def csv_to_data(fileDir, Area, Type, surface) -> list:
     # Reads csv file and calculates
     with open(fileDir, newline='') as csvfile:
         graphData = [[], [], [], []]  # Data used for graph
@@ -195,7 +196,7 @@ def csv_to_data(fileDir, Area, Type, surface):
     return [graphData, outputData]
 
 
-def check_file(filepath):
+def check_file(filepath) -> bool:
     with open(filepath, newline='') as csvfile:
         fileReader = csv.reader(csvfile)
         try:
@@ -231,7 +232,7 @@ def data_to_csv(filepath, username, data):
             writer.writerow(row)
 
 
-def get_surface():
+def get_surface() -> list:
     if request.form.get("roof_") == "on":
         Type = request.form['roof_type']
         surface = 1
@@ -244,7 +245,7 @@ def get_surface():
     return [surface, Type]
 
 
-def check_login():
+def check_login() -> bool:
     try:
         if session['username']:
             return True
@@ -254,23 +255,14 @@ def check_login():
         return False
 
 
-def get_login_text():
+def get_login_text() -> str:
     if check_login():
         return 'Logout'
     else:
         return 'Login'
 
 
-def get_user_data(username):
-    userFiles = do_sql('''SELECT * FROM File_data Where File_data.id =
-                       User_File_data.File_data_id AND
-                       User_File_data.User_id = User.id
-                       And User.username = {}'''.format(username), None)
-    print(userFiles)
-    return userFiles
-
-
-def check_email(email):  # checks if email has an @ then a . at least 1 character after the @
+def check_email(email) -> bool:  # checks if email has an @ then a . at least 1 character after the @
     at_index = None  # the index of the @
     for i in range(len(email)):
         if email[i] == "@" and i != 0:
@@ -281,6 +273,19 @@ def check_email(email):  # checks if email has an @ then a . at least 1 characte
             if email[i] == "." and at_index+1 < i and len(email) >= i+1:
                 return True
     return False
+
+
+def check_file_name(filename) -> bool: 
+    if check_login():
+        userFileNames = do_sql('''SELECT File_data.name FROM File_data,User 
+                           Where File_data.user_id = User.id
+                           And User.username = "{}";'''.format(session['username']), None)
+        for i in userFileNames:
+            if i[0] == filename:
+                return False
+        return True
+    else:
+        return False
 
 
 @app.route('/')
@@ -400,8 +405,18 @@ def Multi_Event_POST():
             file_name = request.form['file_name']
             csv = request.files['csv_input']
             filename = secure_filename(csv.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], username + filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'],str(randrange(9999999999)) + username + filename)
             csv.save(filepath)
+
+            if not check_file_name(file_name):
+                return render_template('Multi_Event.html', error=True,
+                                       error_message='File name already used',
+                                       roof_type=roof_type, files=files,
+                                       road_type=road_type,
+                                       carpark_type=carpark_type,
+                                       login_text=get_login_text())
+
+
             if check_file(filepath):
                 #  If file is valid then assigns filepath of the input file as file
                 file = filepath
@@ -418,18 +433,26 @@ def Multi_Event_POST():
             file = filedir + request.form['location']
 
         if file is not None:
-            data = csv_to_data(file, Area, Type, surface)
-            input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
-            graph_data = data[0]
-            data_to_csv("static/output/", username, data[1])
-            output_data = "/static/output/" + username + ".csv"
-            return render_template('Multi_Event.html', roof_type=roof_type,
-                                   road_type=road_type,
-                                   carpark_type=carpark_type,
-                                   input_data=input_data, graph=graph,
-                                   output_file=output_data, files=files,
-                                   graph_data=json.dumps(graph_data),
-                                   login_text=get_login_text())
+            try:
+                data = csv_to_data(file, Area, Type, surface)
+                input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
+                graph_data = data[0]
+                data_to_csv("static/output/", username, data[1])
+                output_data = "/static/output/" + username + ".csv"
+                return render_template('Multi_Event.html', roof_type=roof_type,
+                                    road_type=road_type,
+                                    carpark_type=carpark_type,
+                                    input_data=input_data, graph=graph,
+                                    output_file=output_data, files=files,
+                                    graph_data=json.dumps(graph_data),
+                                    login_text=get_login_text())
+            except:
+                    return render_template('Multi_Event.html', error=True,
+                                           error_message='File Error',
+                                           roof_type=roof_type, files=files,
+                                           road_type=road_type,
+                                           carpark_type=carpark_type,
+                                           login_text=get_login_text())
         else:
             #  Throws an error if there is a problem with the file
             return render_template('Multi_Event.html', error=True,
