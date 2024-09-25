@@ -49,6 +49,11 @@ header {
   align-items: center;
   padding: 30px 10%;
   height: 10vh;
+  background-color: #1b1b1f;
+}
+
+header * {
+  background-color: transparent;
 }
 
 footer {
@@ -59,22 +64,23 @@ footer {
   overflow: hidden;
 }
 
-footer .footer-top{
+footer .footer-top {
   height: 7vh;
   background-color: #1b1b1f;
   width: 100%;
 }
 
-footer .footer-bottom{
+footer .footer-bottom {
   height: 3vh;
   background-color: #0b0b0c;
-  padding-top: 9px;
+  padding-top: .7vh;
 }
 
-footer .footer-bottom p{
+footer .footer-bottom p {
   width: fit-content;
   margin: auto;
   background-color: transparent;
+  font-size: 1.5vh;
 }
 
 sup {
@@ -87,7 +93,7 @@ sup {
 }
 
 .nav-links {
-  list-style: none;
+  list-style: none;;
 }
 
 .nav-links li{
@@ -154,7 +160,7 @@ button:hover {
 }
 
 .wrapper {
-  width: 420px;
+  width: 430px;
   margin: auto;
   border-radius: 10px;
   padding: 30px 40px;
@@ -587,4 +593,12 @@ input::-webkit-inner-spin-button {
 .centre {
   margin: auto;
   width: fit-content;
+}
+
+.need-login {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  text-align: center;
+  row-gap: 5px;
 }
