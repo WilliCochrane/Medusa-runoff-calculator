@@ -492,7 +492,7 @@ def Multi_Event_POST():
                 #  If file isn't valid then delete it
                 os.remove(filepath)
         else:
-            file = filedir + request.form['location']
+            file = request.form['location']
 
         # file would only be none if it isn't valid
         if file is not None:
