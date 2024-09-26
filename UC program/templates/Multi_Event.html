@@ -238,6 +238,20 @@
         else
             return false;
     };
+
+    const input = document.getElementById('csv_input')
+
+    input.addEventListener('change', (event) => {
+    const target = event.target
+        if (target.files && target.files[0]) {
+
+        // Maximum allowed size is 1MB 
+        const maxAllowedSize = 1 * 1024 * 1024;
+        if (target.files[0].size > maxAllowedSize) {
+            target.value = ''
+        }
+    }
+    });
     </script>
 
     <script>

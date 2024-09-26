@@ -25,6 +25,10 @@ h2 {
   font-weight: 400;
 }
 
+h3 {
+  font-size: 22px;
+}
+
 p {
   font-optical-sizing: auto;
   font-weight: 200;
@@ -49,7 +53,7 @@ header {
   align-items: center;
   padding: 30px 10%;
   height: 10vh;
-  background-color: #1b1b1f;
+  background-color: #212126;
 }
 
 header * {
@@ -601,4 +605,46 @@ input::-webkit-inner-spin-button {
   width: 100%;
   text-align: center;
   row-gap: 5px;
+}
+
+.page {
+  width: 80vw;
+}
+
+.tab-content {
+  margin-top: 20px;
+  line-height: 32px;
+  font-size: 16px;
+}
+
+.container {
+  margin-top: 10px;
+}
+
+.container p{
+  margin: 10px 0;
+}
+
+.container h1{
+  margin: 50px 0;
+  font-size: 40px;
+}
+
+.container h2{
+  font-size: 30px;
+  margin: 30px 0;
+  font-weight: 800;
+}
+
+.container h3{
+  margin: 20px 0;
+}
+
+.container h4{
+  margin: 15px 0;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
 }
