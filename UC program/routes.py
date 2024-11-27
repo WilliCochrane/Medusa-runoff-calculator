@@ -1,16 +1,24 @@
-from flask import Flask, request, render_template, session, redirect, url_for
+from flask import Flask, request, render_template, session, redirect, url_for, jsonify, json, current_app
 from werkzeug.utils import secure_filename
-from math import exp, log, log10, floor
+from math import exp, log, log10, floor, sqrt
 from random import randrange
 import hashlib
 import sqlite3
-import csv
+import zipfile
+import stripe
 import json
+import xlwt
+import csv
 import os
+
+# This is your test secret API key.
+stripe.api_key = 'sk_test_51QEKXbASoVcyVGhrVn85dRlBcFTOLwkFjXrce6BCyzYIhQoN92EUNCPgkmXcMfl3JGDgK9OhjUeBnZqjg1jXS6cO00gpwYzXCf'
+
 
 # This bellow is just for ease of use with pythonanywhere
 # filedir = "/home/willicochrane/"
 filedir = ""
+domain = 'http://localhost:4242'
 
 app = Flask(__name__, static_folder=filedir+"static")
 UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
@@ -40,8 +48,8 @@ def getConcentration(volume, mass) -> float:  # Calculates concentration
 
 
 # main calculation function
-def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface) -> list:
-    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(int(Type)), None)
+def calculateRunoff(Area : float, ADD : float, INT : float, DUR : float, PH : float, Type : int) -> list:
+    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(Type), None)
     # The variables below are named like that in the fomulas I was provided
     # TSS Coefficients
     a1 = coeff[0][3]
@@ -82,6 +90,7 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface) -> list:
     l1 = coeff[0][23]
     m1 = coeff[0][33]
 
+    surface = coeff[0][34]
     # Calculating water volume in litres
     volume = INT * Area * DUR
 
@@ -155,8 +164,9 @@ def calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface) -> list:
     flowRate = volume/DUR/60
     data = [TSS, TZn, DZn, TCu, DCu, volume,
             flowRate, CTSS, CTZn, CDZn, CTCu, CDCu]
-    sigfig = 5
-    # Rouds all data to 5 s.f
+    
+    sigfig = 3
+    # Rouds all data to 3 s.f
     for i in range(len(data)):
         data[i] = rounded(data[i], sigfig)
     return data
@@ -178,8 +188,7 @@ def csv_to_data(fileDir, Area, Type, surface) -> list:
                 fileLength += 1
                 # Calculates data
                 runoff = calculateRunoff(Area, float(row[2]), float(row[3]),
-                                         float(row[4]), float(row[1]), Type,
-                                         surface)
+                                         float(row[4]), float(row[1]), Type)
                 try:
                     # If a date is provided then it will use the date instead of event number
                     graphData[0].append(row[5])
@@ -282,10 +291,172 @@ def get_surface_name(surface) -> str:
         return 'Invalid'
 
 
+# gets the id of the surface(road roof carpark) from type (galvanised, ect)
+def get_surface_from_type(typeInt : str, typeStr : str, isInt : bool) -> int:
+    if isInt:
+        surface = do_sql("SELECT type FROM Coefficient WHERE id = '{}'".format(typeInt), None)
+        return surface[0][0]
+    else:
+        surface = do_sql("SELECT type FROM Coefficient WHERE name = '{}'".format(typeStr), None)
+        return surface[0][0]
+
+
+
 # gats the name of the material fron material as an int
 def get_material_name(material) -> str:
     mat = do_sql("SELECT name FROM Coefficient WHERE id = '{}';".format(material), None)
     return mat[0][0]
+
+
+def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username : str):    
+    print("calculating")
+    climateData = []
+    with open(climateFilepath, newline='') as climateCsvFile:
+        climatecsvreader = csv.reader(climateCsvFile)
+        for row in climatecsvreader:
+             if row[1] != '' and row[1].isalpha() == False:
+                climateData.append(row)
+    wb = xlwt.Workbook()
+    
+    with open(surfaceFilepath, newline='') as surfaceCsvFile:
+        num_of_surfaces = number_of_surfaces()
+        surfaceCsvReader = csv.reader(surfaceCsvFile)
+
+        sumamrySheet = wb.add_sheet("Summary")
+        sumamrySheet.write(0, 0, "id")
+        sumamrySheet.write(0, 1, "Surface")
+        sumamrySheet.write(0, 2, "TSS Total(mg)")
+        sumamrySheet.write(0, 3, "TSS Average(mg)")
+        sumamrySheet.write(0, 4, "TSS Standard Deviation(mg)")
+        sumamrySheet.write(0, 5, "TZn Total(mg)")
+        sumamrySheet.write(0, 6, "TZn Average(mg)")
+        sumamrySheet.write(0, 7, "TZn Standard Deviation(mg)")
+        sumamrySheet.write(0, 8, "TCu Total(mg)")
+        sumamrySheet.write(0, 9, "TCu Average(mg)")
+        sumamrySheet.write(0, 10, "TCu Standard Deviation(mg)")
+        rowNumber = 0
+        for row in surfaceCsvReader:
+            if row[0].isalpha() or row[1].isalpha() or int(row[0]) > num_of_surfaces:
+                pass
+            else:
+                rowNumber += 1
+                area = float(row[1])
+                Type = int(row[0])
+                TSSTotal = 0
+                TSSVarience = 0
+                TZnTotal = 0
+                TZnVarience = 0
+                TCuTotal = 0
+                TCuVarience = 0
+
+                sheetname = str(rowNumber)  # replace later
+                ws = wb.add_sheet(sheetname, False)
+
+                ws.write(0, 0, "Event")
+                ws.write(0, 1, "TSS (mg)")
+                ws.write(0, 2, "TZn (mg)")
+                ws.write(0, 3, "DZn (mg)")
+                ws.write(0, 4, "TCu (mg)")
+                ws.write(0, 5, "DCu (mg)")
+                ws.write(0, 6, "Volume (l)")
+                ws.write(0, 7, "Flow rate (l/min)")
+                ws.write(0, 8, "Conc. TSS (mg/l)")
+                ws.write(0, 9, "Conc. TZn (mg/l)'")
+                ws.write(0, 10, "Conc. DZn (mg/l)")
+                ws.write(0, 11, "Conc. TCu (mg/l)")
+                ws.write(0, 12, "Conc. DCu (mg/l)")
+
+                ws.write(0, 15, "Average(mg)")
+                ws.write(0, 16, "Total(mg)")
+                ws.write(0, 17, "Standard Deviation(mg)")
+                ws.write(1, 14, "TSS")
+                ws.write(2, 14, "TZn")
+                ws.write(3, 14, "TCu")
+
+                ws.write(5, 15, "Surface:")
+                ws.write(5, 16, get_material_name(Type))
+                ws.write(6, 15, "Area:")
+                ws.write(6, 16, area)
+
+                for i in range(len(climateData)):
+                    currentRow = i + 1
+                    climateDataRow = climateData[i]
+                    if len(climateDataRow) >= 6:
+                        ws.write(currentRow, 0, climateDataRow[5])
+                    else:
+                        ws.write(currentRow, 0, currentRow)
+                        pass
+                                    
+                    runoff = calculateRunoff(area,float(climateDataRow[2]), float(climateDataRow[3]),
+                                            float(climateDataRow[4]), float(climateDataRow[1]),Type)
+                    TSSTotal += runoff[0]
+                    TZnTotal += runoff[1]
+                    TCuTotal += runoff[3]
+                    TSSVarience += (runoff[0]**2)/len(climateData)
+                    TZnVarience += (runoff[0]**2)/len(climateData)
+                    TCuVarience += (runoff[3]**2)/len(climateData)
+
+                    for j in range(len(runoff)):
+                        ws.write(currentRow, j+1, runoff[j])
+                
+                TSSAverage = TSSTotal/len(climateData)
+                TZnAverage = TZnTotal/len(climateData)
+                TCuAverage = TCuTotal/len(climateData)
+                TSSVarience -= TSSAverage**2
+                TZnVarience -= TZnAverage**2
+                TCuVarience -= TCuAverage**2             
+
+                TSSStandDev = sqrt(TSSVarience)
+                TZnStandDev = sqrt(TZnVarience)
+                TCuStandDev = sqrt(TCuVarience)
+
+                ws.write(1, 15, TSSAverage)
+                ws.write(1, 16, TSSTotal)
+                ws.write(1, 17, TSSStandDev)
+                ws.write(2, 15, TZnAverage)
+                ws.write(2, 16, TZnTotal)
+                ws.write(2, 17, TZnStandDev)
+                ws.write(3, 15, TCuAverage)
+                ws.write(3, 16, TCuTotal)
+                ws.write(3, 17, TCuStandDev)
+
+                sumamrySheet.write(rowNumber, 0, rowNumber)
+                sumamrySheet.write(rowNumber, 1, get_material_name(Type))
+                sumamrySheet.write(rowNumber, 2, TSSTotal)
+                sumamrySheet.write(rowNumber, 3, TSSAverage)
+                sumamrySheet.write(rowNumber, 4, TSSStandDev)
+                sumamrySheet.write(rowNumber, 5, TZnTotal)
+                sumamrySheet.write(rowNumber, 6, TZnAverage)
+                sumamrySheet.write(rowNumber, 7, TZnStandDev)
+                sumamrySheet.write(rowNumber, 8, TCuTotal)
+                sumamrySheet.write(rowNumber, 9, TCuAverage)
+                sumamrySheet.write(rowNumber, 10, TCuStandDev)
+
+    filepath = username + ".xls"
+    zipFilepath = username +".zip"
+
+    make_filepath_avalable("static/output/"+zipFilepath)
+
+    wb.save(filepath)
+    zip = zipfile.ZipFile(zipFilepath, "w", zipfile.ZIP_DEFLATED)
+    zip.write(filepath)
+    zip.close()
+    os.rename(zipFilepath, "static/output/"+zipFilepath)
+    os.remove(filepath)
+
+
+def number_of_surfaces() -> int:
+    surfaces = do_sql("SELECT * FROM Coefficient;", None)
+    return len(surfaces)
+
+
+
+def make_filepath_avalable(filepath : str):
+    try:
+        # if there is already a prexisting file then remove it
+        os.remove(filepath)
+    except:
+        print("no file")
 
 
 # checks if the user is logged in
@@ -335,6 +506,9 @@ def check_file_name(filename) -> bool:
         return True
     else:
         return False
+
+
+# multi_surface_to_xlsl("static\climate_data\climate_events_2011_CCC.csv","static\climate_data\climate_events_2011_CCC.csv", "xlslfile")
 
 
 @app.route('/')
@@ -426,12 +600,18 @@ def Multi_Event_POST():
         roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
         road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
         carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
-        surface = get_surface()[0]
-        Type = get_surface()[1]
         graph = True
         file = None
+
+        if request.form.get('Surface_file_') == 'on':
+            surface_csv = request.files['surface_csv']
+            filename = secure_filename(surface_csv)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'surface_file_' + username)
+            make_filepath_avalable(filepath)
+            surface_csv.save(filepath)
+
         surface = get_surface()[0]
-        Type = get_surface()[1]
+        Type = get_surface()[1]  # Type spesific type of the surface input
         username = session['username']
         #  Gats the name of the correct surface and type
         surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM
@@ -455,7 +635,7 @@ def Multi_Event_POST():
                                    login_text=get_login_text())
         if Area <= 0:
             return render_template('Multi_Event.html', error=True,
-                                   error_message="Area can't be < or = 0",
+                                   error_message="Area can't be less than or equal to  0",
                                    roof_type=roof_type, files=files,
                                    road_type=road_type,
                                    carpark_type=carpark_type,
@@ -504,7 +684,7 @@ def Multi_Event_POST():
                 data_to_csv("static/output/", username, data[1])
                 output_data = "/static/output/" + username + ".csv"
                 return render_template('Multi_Event.html', roof_type=roof_type,
-                                       road_type=road_type,
+                                       road_type=road_type, single_surface=True,
                                        carpark_type=carpark_type,
                                        input_data=input_data, graph=graph,
                                        output_file=output_data, files=files,
@@ -616,6 +796,106 @@ def PrivacyPolicy():
     return render_template('Privacy_policy.html', login_text=get_login_text())
 
 
+@app.route('/Checkout')
+def Checkout():
+    return render_template('checkout.html')
+
+
+@app.route('/Sucess')
+def Success():
+    return render_template('success.html')
+
+
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    try:
+        prices = stripe.Price.list(
+            lookup_keys=[request.form['lookup_key']],
+            expand=['data.product']
+        )
+
+        checkout_session = stripe.checkout.Session.create(
+            line_items=[
+                {
+                    'price': prices.data[0].id,
+                    'quantity': 1,
+                },
+            ],
+            mode='subscription',
+            success_url=domain +
+            '/Sucess?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=domain + '/cancel.html',
+        )
+        return redirect(checkout_session.url, code=303)
+    except Exception as e:
+        print(e)
+        return "Server error", 500
+
+
+@app.route('/create-portal-session', methods=['POST'])
+def customer_portal():
+    # For demonstration purposes, we're using the Checkout session to retrieve the customer ID.
+    # Typically this is stored alongside the authenticated user in your database.
+    checkout_session_id = request.form.get('session_id')
+    checkout_session = stripe.checkout.Session.retrieve(checkout_session_id)
+
+    # This is the URL to which the customer will be redirected after they are
+    # done managing their billing with the portal.
+    return_url = domain
+
+    portalSession = stripe.billing_portal.Session.create(
+        customer=checkout_session.customer,
+        return_url=return_url,
+    )
+    return redirect(portalSession.url, code=303)
+
+
+@app.route('/webhook', methods=['POST'])
+def webhook_received():
+    # Replace this endpoint secret with your endpoint's unique secret
+    # If you are testing with the CLI, find the secret by running 'stripe listen'
+    # If you are using an endpoint defined with the API or dashboard, look in your webhook settings
+    # at https://dashboard.stripe.com/webhooks
+    webhook_secret = 'whsec_huw*(F1)#!D!JD(hud9G!'
+    request_data = json.loads(request.data)
+
+    if webhook_secret:
+        # Retrieve the event by verifying the signature using the raw body and secret if webhook signing is configured.
+        signature = request.headers.get('stripe-signature')
+        try:
+            event = stripe.Webhook.construct_event(
+                payload=request.data, sig_header=signature, secret=webhook_secret)
+            data = event['data']
+        except Exception as e:
+            return e
+        # Get the type of webhook event sent - used to check the status of PaymentIntents.
+        event_type = event['type']
+    else:
+        data = request_data['data']
+        event_type = request_data['type']
+    data_object = data['object']
+
+    print('event ' + event_type)
+
+    if event_type == 'checkout.session.completed':
+        print('🔔 Payment succeeded!')
+    elif event_type == 'customer.subscription.trial_will_end':
+        print('Subscription trial will end')
+    elif event_type == 'customer.subscription.created':
+        print('Subscription created %s', event.id)
+    elif event_type == 'customer.subscription.updated':
+        print('Subscription created %s', event.id)
+    elif event_type == 'customer.subscription.deleted':
+        # handle subscription canceled automatically based
+        # upon your subscription settings. Or if the user cancels it.
+        print('Subscription canceled: %s', event.id)
+    elif event_type == 'entitlements.active_entitlement_summary.updated':
+        # handle active entitlement summary updated
+        print('Active entitlement summary updated: %s', event.id)
+
+    return jsonify({'status': 'success'})
+
+
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
     return render_template('404page.html', login_text=get_login_text())
@@ -627,4 +907,4 @@ def Server_error(error):
 
 
 if __name__ == "__main__":  # Last lines
-    app.run(debug=True)
+    app.run(debug=True, port=4242)

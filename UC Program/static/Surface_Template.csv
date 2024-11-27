@@ -1,0 +1,21 @@
+Surface id*,Area (m2),,*Surfaces,id
+,,Roof,Galvanised uncoated new,1
+,,,Galvanised uncoated old,2
+,,,Colorsteel New,3
+,,,Colorsteel Old,4
+,,,"Galvanised painted, older",5
+,,,"Galvanised painted, newer",6
+,,,"Concrete, no Zn",7
+,,,"Concrete, Zn guttering",8
+,,,Non-metallic,9
+,,,Copper,10
+,,,,
+,,Road,Major arterial,11
+,,,Minor arterial,12
+,,,Collector,13
+,,,Local Road,14
+,,,Private Road,15
+,,,,
+,,Carpark,Commercial,16
+,,,Industrial Std,17
+,,,Industrial Mnv,18
