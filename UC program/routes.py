@@ -1,7 +1,11 @@
 from flask import Flask, request, render_template, session, redirect, url_for, jsonify, json, current_app
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor, sqrt
-from random import randrange
+import random 
+import string
+import smtplib, ssl
 import hashlib
 import sqlite3
 import zipfile
@@ -244,11 +248,8 @@ def check_file(filepath) -> bool:
 
 def data_to_csv(filepath, username, data):
     path = filedir + filepath + username + ".csv"
-    try:
-        # if there is already a prexisting file then remove it
-        os.remove(path)
-    except:
-        print("no file")
+    zip_path = filedir + filepath + username + ".zip"
+    make_filepath_avalable(path)
 
     with open(path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -263,6 +264,15 @@ def data_to_csv(filepath, username, data):
             row = i[1]
             row.insert(0, i[0])
             writer.writerow(row)
+    
+   # zipFilepath = filedir + username + ".zip"
+
+   # zip = zipfile.ZipFile(zipFilepath, "w", zipfile.ZIP_DEFLATED)
+   # zip.write(filedir + filepath)
+   # zip.close()
+   # os.rename(filedir + zipFilepath, filedir + "static/output/" + zipFilepath)
+   # os.remove(filedir + filepath)
+   # os.remove(climateFilepath)
 
 
 # retrns the material and the surface(roof, road, or carpark)
@@ -336,7 +346,7 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
         sumamrySheet.write(0, 10, "TCu Standard Deviation(mg)")
         rowNumber = 0
         for row in surfaceCsvReader:
-            if row[0].isalpha() or row[1].isalpha() or int(row[0]) > num_of_surfaces:
+            if row[0].isalpha() or row[1].isalpha() or int(row[0]) > 18:
                 pass
             else:
                 rowNumber += 1
@@ -434,15 +444,19 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
 
     filepath = username + ".xls"
     zipFilepath = username +".zip"
+    
+    make_filepath_avalable(surfaceFilepath)
+    make_filepath_avalable(filedir + "static/output/" + zipFilepath)
 
-    make_filepath_avalable("static/output/"+zipFilepath)
-
-    wb.save(filepath)
+    wb.save(filedir + filepath)
     zip = zipfile.ZipFile(zipFilepath, "w", zipfile.ZIP_DEFLATED)
     zip.write(filepath)
     zip.close()
-    os.rename(zipFilepath, "static/output/"+zipFilepath)
-    os.remove(filepath)
+    os.rename(zipFilepath, filedir + "static/output/" + zipFilepath)
+    os.remove(filedir + filepath)
+    os.remove(climateFilepath)
+
+    return filedir + "static/output/" + zipFilepath
 
 
 def number_of_surfaces() -> int:
@@ -508,7 +522,35 @@ def check_file_name(filename) -> bool:
         return False
 
 
-# multi_surface_to_xlsl("static\climate_data\climate_events_2011_CCC.csv","static\climate_data\climate_events_2011_CCC.csv", "xlslfile")
+def random_code(*, min_nupper = 3, ndigits = 3):
+    letters_upper = random.choices(string.ascii_uppercase, k=min_nupper)
+    digits = random.choices(string.digits, k=ndigits)
+
+    password_chars = letters_upper + digits
+    random.shuffle(password_chars)
+
+    return ''.join(password_chars)
+
+
+def send_email(recieving_email : str, subject : str, text : str, html : str):
+    sender_email = "my@gmail.com"
+    password = "Password"
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = subject
+    message["From"] = sender_email
+    message["To"] = recieving_email
+
+    # Turn these into plain/html MIMEText objects
+    part1 = MIMEText(text, "plain")
+    part2 = MIMEText(html, "html")
+
+
+
+
+def send_reset_email(recieving_email : str) -> bool:  # returns wherther or not it worked
+    pass
+
 
 
 @app.route('/')
@@ -602,51 +644,58 @@ def Multi_Event_POST():
         carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
         graph = True
         file = None
+        surface_file = None
+        multi_surface = False
 
-        if request.form.get('Surface_file_') == 'on':
-            surface_csv = request.files['surface_csv']
-            filename = secure_filename(surface_csv)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'surface_file_' + username)
-            make_filepath_avalable(filepath)
-            surface_csv.save(filepath)
-
-        surface = get_surface()[0]
-        Type = get_surface()[1]  # Type spesific type of the surface input
         username = session['username']
         #  Gats the name of the correct surface and type
-        surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM
-                                Coefficient,Site_type WHERE
-                                Coefficient.type=Site_type.id and
-                                Coefficient.id='{}'""".format(int(Type)), None)
         files = do_sql('''SELECT File_data.name, File_data.path FROM File_data,
                        User WHERE File_data.file_type=1 and
                        File_data.user_id=User.id and
                        User.username="{}";'''.format(username), None)
-        try:
-            Area = float(request.form['area'])
-        except:
-            # if area is broken then return error
-            return render_template('Multi_Event.html', error=True,
-                                   error_message='Invalid data',
-                                   roof_type=roof_type,
-                                   files=files,
-                                   road_type=road_type,
-                                   carpark_type=carpark_type,
-                                   login_text=get_login_text())
-        if Area <= 0:
-            return render_template('Multi_Event.html', error=True,
-                                   error_message="Area can't be less than or equal to  0",
-                                   roof_type=roof_type, files=files,
-                                   road_type=road_type,
-                                   carpark_type=carpark_type,
-                                   login_text=get_login_text())
+
+        if request.form.get('Surface_file_') == 'on':
+            multi_surface = True
+            surface_csv = request.files['surface_csv']
+            filename = secure_filename(surface_csv.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'surface_file_' + username)
+            make_filepath_avalable(filepath)
+            surface_csv.save(filepath)
+            surface_file = filepath
+        else:
+            surface = get_surface()[0]
+            Type = get_surface()[1]  # Type spesific type of the surface input
+
+            surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM
+                        Coefficient,Site_type WHERE
+                        Coefficient.type=Site_type.id and
+                        Coefficient.id='{}'""".format(int(Type)), None)
+            try:
+                Area = float(request.form['area'])
+            except:
+                # if area is broken then return error
+                return render_template('Multi_Event.html', error=True,
+                                    error_message='Invalid data',
+                                    roof_type=roof_type,
+                                    files=files,
+                                    road_type=road_type,
+                                    carpark_type=carpark_type,
+                                    login_text=get_login_text())
+            if Area <= 0:
+                return render_template('Multi_Event.html', error=True,
+                                    error_message="Area can't be less than or equal to  0",
+                                    roof_type=roof_type, files=files,
+                                    road_type=road_type,
+                                    carpark_type=carpark_type,
+                                    login_text=get_login_text())
+        
         #  If file uploaded
         if request.form.get('file_') == 'on':
             file_name = request.form['file_name']
             csv = request.files['csv_input']
             filename = secure_filename(csv.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'],
-                                    str(randrange(9999999999)) +
+                                    str(random.randrange(9999999999)) +
                                     username + filename)
             csv.save(filepath)
 
@@ -676,28 +725,36 @@ def Multi_Event_POST():
 
         # file would only be none if it isn't valid
         if file is not None:
-            try:
+            #try:
+            if multi_surface:
+                
+                input_data = ("1", "2", "3")
+                graph_data = None
+                output_data = multi_surface_to_xlsl(file, surface_file, username)
+            else:
                 data = csv_to_data(file, Area, Type, surface)
                 # data based on user input
                 input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
                 graph_data = data[0]
                 data_to_csv("static/output/", username, data[1])
                 output_data = "/static/output/" + username + ".csv"
-                return render_template('Multi_Event.html', roof_type=roof_type,
-                                       road_type=road_type, single_surface=True,
-                                       carpark_type=carpark_type,
-                                       input_data=input_data, graph=graph,
-                                       output_file=output_data, files=files,
-                                       graph_data=json.dumps(graph_data),
-                                       login_text=get_login_text())
-            except:
-                # returns error if anything breaks
-                return render_template('Multi_Event.html', error=True,
-                                       error_message='File Error',
-                                       roof_type=roof_type, files=files,
-                                       road_type=road_type,
-                                       carpark_type=carpark_type,
-                                       login_text=get_login_text())
+
+            return render_template('Multi_Event.html', roof_type=roof_type,
+                                   road_type=road_type, single_surface=True,
+                                   carpark_type=carpark_type,
+                                   input_data=input_data, graph=graph,
+                                   output_file=output_data, files=files,
+                                   graph_data=json.dumps(graph_data),
+                                   login_text=get_login_text())
+            
+#            except:
+#                # returns error if anything breaks
+#                return render_template('Multi_Event.html', error=True,
+#                                       error_message='File Error',
+#                                       roof_type=roof_type, files=files,
+#                                       road_type=road_type,
+#                                       carpark_type=carpark_type,
+#                                       login_text=get_login_text())
         else:
             #  Throws an error if there is a problem with the file
             return render_template('Multi_Event.html', error=True,

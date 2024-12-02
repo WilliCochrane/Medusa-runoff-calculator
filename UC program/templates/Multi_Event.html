@@ -41,7 +41,7 @@
                     <button type="menu" onclick="downloadURL('/static/Surface_Template.csv', 'Surface_Template.csv'); return false;">File Template <i class='bx bxs-download'></i></button>
                 </a>
                 <br><br>
-                <input id="surface_file_input" type="file" accept=".csv" name="surface_csv_input" method="POST" required>
+                <input id="surface_csv" type="file" accept=".csv" name="surface_csv" method="POST" required>
                 <br><br>
             </div>
 
@@ -183,7 +183,7 @@
             var multi_surface = document.getElementById("multi_surface")
             var single_surface = document.getElementById("Single_surface")
 
-            var file_input = document.getElementById("surface_file_input")
+            var file_input = document.getElementById("surface_csv")
             var area = document.getElementById("ME-area")
 
             if (multi){
@@ -286,6 +286,7 @@
                 file_name.removeAttribute("required");
             }
         }
+        multi_surface(false);
         surface_ty();
         fy_input();
 
