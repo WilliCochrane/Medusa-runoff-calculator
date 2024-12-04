@@ -31,7 +31,7 @@ app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'  # No looking
 
 
 def do_sql(sql, values) -> list:
-    db = sqlite3.connect('Coefficients.db')
+    db = sqlite3.connect(filedir + 'Coefficients.db')
     cur = db.cursor()
     # If the value isn't none then the change will be commited to the database
     if values is not None:
@@ -53,7 +53,7 @@ def getConcentration(volume, mass) -> float:  # Calculates concentration
 
 # main calculation function
 def calculateRunoff(Area : float, ADD : float, INT : float, DUR : float, PH : float, Type : int) -> list:
-    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}'".format(Type), None)
+    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}';".format(Type), None)
     # The variables below are named like that in the fomulas I was provided
     # TSS Coefficients
     a1 = coeff[0][3]
@@ -446,15 +446,14 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
     zipFilepath = username +".zip"
     
     make_filepath_avalable(surfaceFilepath)
-    make_filepath_avalable(filedir + "static/output/" + zipFilepath)
+    make_filepath_avalable("static/output/" + zipFilepath)
 
-    wb.save(filedir + filepath)
+    wb.save(filepath)
     zip = zipfile.ZipFile(zipFilepath, "w", zipfile.ZIP_DEFLATED)
     zip.write(filepath)
     zip.close()
     os.rename(zipFilepath, filedir + "static/output/" + zipFilepath)
-    os.remove(filedir + filepath)
-    os.remove(climateFilepath)
+    os.remove(filepath)
 
     return filedir + "static/output/" + zipFilepath
 
@@ -611,18 +610,15 @@ def Single_Event_POST():
         INT = float(request.form['INT'])
         DUR = float(request.form['DUR'])
         PH = float(request.form['PH'])
-
         # checks if pH is within acceptable range else throws error
         if PH > 7.1 or PH < 4:
             return render_template('Single_Event.html', roof_type=roof_type,
                                    road_type=road_type, carpark_type=carpark_type,
                                    error=True, error_message="pH isn't between 4 and 7.1",
                                    login_text=get_login_text())
-
         single = True  # bool for if output
-        data = calculateRunoff(Area, ADD, INT, DUR, PH, Type, surface)
+        data = calculateRunoff(Area, ADD, INT, DUR, PH, Type)
         input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
-
         return render_template('Single_Event.html', roof_type=roof_type,
                                road_type=road_type, carpark_type=carpark_type,
                                input_data=input_data, data=data, single=single,
