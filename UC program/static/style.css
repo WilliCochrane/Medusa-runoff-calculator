@@ -648,3 +648,14 @@ input::-webkit-inner-spin-button {
   font-size: 24px;
   font-weight: 700;
 }
+
+.info-icon {
+  margin: auto;
+  font-size: 20px;
+  translate: -30px 1px;
+  width: 0;
+}
+
+.info-icon :hover {
+  color:#0088a9;
+}

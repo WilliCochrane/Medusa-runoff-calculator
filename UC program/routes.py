@@ -286,6 +286,10 @@ def get_surface() -> list:
     elif request.form.get("carpark_") == "on":
         Type = request.form['carpark_type']
         surface = 3
+
+    material = do_sql("SELECT * FROM Coefficient WHERE id = '{}';".format(Type), None)
+    if material[0][35] == 1: # if the material condition type is 1 i.e. is a parent material with a condition tab
+        Type = request.form[str(Type)]  # the selection input is named after the parent id
     return [surface, Type]
 
 
@@ -546,10 +550,36 @@ def send_email(recieving_email : str, subject : str, text : str, html : str):
 
 
 
-
 def send_reset_email(recieving_email : str) -> bool:  # returns wherther or not it worked
     pass
 
+
+def Setup_data():
+    # gets the materials and not the conditions of the materials e.g. poor, new
+    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1 AND material_condition_type != 2;", None)
+    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2 AND material_condition_type != 2;", None)
+    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3 AND material_condition_type != 2;", None)
+
+    material_conditions = do_sql("SELECT * FROM Coefficient WHERE material_condition_type = 2;", None)
+
+    material_condition_data = []
+    # format: [[material_id, [[name, id], [name, id], [name, id]]],[material_id, [[name, id], [name, id], [name, id]]]]
+    for condition in material_conditions:
+        parent_material_id = condition[36]
+        coefficient_id = condition[0]
+        condition_name = condition[2]
+        condition_data = [coefficient_id, condition_name]
+
+        material_already_added = False
+        for i in material_condition_data:
+            if i[0] == parent_material_id:
+                material_already_added = True
+                i[1].append(condition_data)
+        
+        if not material_already_added:
+            material_condition_data.append([parent_material_id, [condition_data]])
+
+    return [roof_type, road_type, carpark_type, material_condition_data]
 
 
 @app.route('/')
@@ -561,10 +591,13 @@ def Home_Page():
 def Multi_Event():
     if check_login():  # if logged do the things
         # gets the materials for each surface
-        roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
-        road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
-        carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+        setupData = Setup_data()
+        roof_type = setupData[0]
+        road_type = setupData[1]
+        carpark_type = setupData[2]
+        condition_data = setupData[3]
         username = session['username']
+
         # gets all files uploaded from the user
         files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
                        File_data.file_type=1 and File_data.user_id=User.id and
@@ -572,6 +605,7 @@ def Multi_Event():
         return render_template('Multi_Event.html', roof_type=roof_type,
                                files=files, road_type=road_type,
                                carpark_type=carpark_type,
+                               condition_data=condition_data,
                                login_text=get_login_text())
     else:  # not logged in then dont let user do multi event sim
         return render_template('needToLogin.html', login_text=get_login_text())
@@ -580,20 +614,25 @@ def Multi_Event():
 @app.route('/Single_Event')
 def Single_Event():
     # gets the materials for each surface
-    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
-    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
-    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+    setupData = Setup_data()
+    roof_type = setupData[0]
+    road_type = setupData[1]
+    carpark_type = setupData[2]
+    condition_data = setupData[3]
     return render_template('Single_Event.html', roof_type=roof_type,
                            road_type=road_type, carpark_type=carpark_type,
+                           condition_data=condition_data,
                            login_text=get_login_text())
 
 
 @app.route('/Single_Event', methods=['POST'])
 def Single_Event_POST():
     # gets the materials for each surface
-    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
-    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
-    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+    setupData = Setup_data()
+    roof_type = setupData[0]
+    road_type = setupData[1]
+    carpark_type = setupData[2]
+    condition_data = setupData[3]
     data = []
     surface = get_surface()[0]
     Type = get_surface()[1]
@@ -622,12 +661,14 @@ def Single_Event_POST():
         return render_template('Single_Event.html', roof_type=roof_type,
                                road_type=road_type, carpark_type=carpark_type,
                                input_data=input_data, data=data, single=single,
+                               condition_data=condition_data,
                                login_text=get_login_text())
     except:
         # if code breaks return error
         return render_template('Single_Event.html', roof_type=roof_type,
                                road_type=road_type, carpark_type=carpark_type,
                                error=True, error_message="Invalid data",
+                               condition_data=condition_data,
                                login_text=get_login_text())
 
 
@@ -635,9 +676,11 @@ def Single_Event_POST():
 def Multi_Event_POST():
     if check_login():
         # variables for render template
-        roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1", None)
-        road_type = do_sql("SELECT * FROM Coefficient WHERE type=2", None)
-        carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3", None)
+        setupData = Setup_data()
+        roof_type = setupData[0]
+        road_type = setupData[1]
+        carpark_type = setupData[2]
+        condition_data = setupData[3]
         graph = True
         file = None
         surface_file = None
@@ -672,6 +715,7 @@ def Multi_Event_POST():
                 # if area is broken then return error
                 return render_template('Multi_Event.html', error=True,
                                     error_message='Invalid data',
+                                    condition_data=condition_data,
                                     roof_type=roof_type,
                                     files=files,
                                     road_type=road_type,
@@ -680,6 +724,7 @@ def Multi_Event_POST():
             if Area <= 0:
                 return render_template('Multi_Event.html', error=True,
                                     error_message="Area can't be less than or equal to  0",
+                                    condition_data=condition_data,
                                     roof_type=roof_type, files=files,
                                     road_type=road_type,
                                     carpark_type=carpark_type,
@@ -699,6 +744,7 @@ def Multi_Event_POST():
                 # error if file name exists under the current user
                 return render_template('Multi_Event.html', error=True,
                                        error_message='File name already used',
+                                       condition_data=condition_data,
                                        roof_type=roof_type, files=files,
                                        road_type=road_type,
                                        carpark_type=carpark_type,
@@ -737,6 +783,7 @@ def Multi_Event_POST():
 
             return render_template('Multi_Event.html', roof_type=roof_type,
                                    road_type=road_type, single_surface=True,
+                                   condition_data=condition_data,
                                    carpark_type=carpark_type,
                                    input_data=input_data, graph=graph,
                                    output_file=output_data, files=files,
@@ -755,6 +802,7 @@ def Multi_Event_POST():
             #  Throws an error if there is a problem with the file
             return render_template('Multi_Event.html', error=True,
                                    error_message='File Error',
+                                   condition_data=condition_data,
                                    roof_type=roof_type, files=files,
                                    road_type=road_type,
                                    carpark_type=carpark_type,

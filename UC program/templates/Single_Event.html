@@ -49,8 +49,14 @@
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
+
+
+            
             <div id="roof" class="select-container">
-                <select name="roof_type" id="roof_type" class="selection" method="POST" required>
+                <a class="info-icon" href="#">
+                    <i class='bx bx-info-circle'></i>
+                </a>
+                <select name="roof_type" id="roof_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                     <option value="">-- Select Material --</option>
                     {% for type in roof_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
@@ -61,7 +67,10 @@
                 </div>
             </div>
             <div id="road" style="display: none;" class="select-container">
-                <select name="road_type" id="road_type" class="selection" method="POST" required>
+                <a class="info-icon" href="#">
+                    <i class='bx bx-info-circle'></i>
+                </a>
+                <select name="road_type" id="road_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                     <option value="">-- Select Material --</option>
                     {% for type in road_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
@@ -72,7 +81,10 @@
                 </div>
             </div>
             <div id="carpark" style="display: none;" class="select-container">
-                <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
+                <a class="info-icon" href="#">
+                    <i class='bx bx-info-circle'></i>
+                </a>
+                <select name="carpark_type" id="carpark_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                     <option value="">-- Select Material --</option>
                     {% for type in carpark_type %}
                     <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
@@ -82,6 +94,22 @@
                     <i class='bx bx-chevron-down'></i>
                 </div>
             </div>
+
+            {% for i in condition_data %}
+            <div id="{{ i[0] }}" style="display: none;" class="select-container">
+                <select id="select{{ i[0] }}" name="{{ i[0] }}" class="selection" method="POST">
+                    <option value="">-- Select Condition --</option>
+                    {% for x in i[1] %}
+                    <option value="{{ x[0] }}" class="option">{{ x[1] }}</option>
+                    {% endfor %}
+                </select>
+                <div class="icon-container">
+                    <i class='bx bx-chevron-down'></i>
+                </div>
+            </div>
+            {% endfor %}
+
+
             <div class="input-box">
                 <input type="text" id="ADDipt" 
                 name="ADD" value='' onpaste="return false" required maxlength="25">
@@ -143,6 +171,25 @@
     </div>
 </form>
 <script>
+    var last_contition_id = "";
+    function DisplayCondition(condition_id) {
+        try {
+            document.getElementById(last_contition_id).style.display = "none";
+            document.getElementById("select"+last_contition_id).removeAttribute("required");
+        }
+        catch {
+        }
+
+        try {
+            document.getElementById(condition_id).style.display = "flex";
+            document.getElementById("select"+condition_id).setAttribute("required", "required");
+        }
+        catch {
+        }
+
+        last_contition_id = condition_id;
+    }
+    
     function surface_ty() {
         var road = document.getElementById("road");
         var roof = document.getElementById("roof");

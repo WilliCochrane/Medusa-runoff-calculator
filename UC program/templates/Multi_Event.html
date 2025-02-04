@@ -26,11 +26,11 @@
             <p class="error">{{ error_message }}</p><br>
             <div>
                 <div>
-                    <input class="surface_checkbox" type="checkbox" name="Single_surface_" onclick="onlyOne(this); multi_surface(false)" checked>
+                    <input class="surface_checkbox" type="checkbox" name="Single_surface_" onclick="onlyOne(this); multi_surface(false);" checked>
                     <label for="Single_surface_">Single surface</label>
                 </div>
                 <div>
-                    <input class="surface_checkbox" type="checkbox" name="Surface_file_" onclick="onlyOne(this); multi_surface(true)">
+                    <input class="surface_checkbox" type="checkbox" name="Surface_file_" onclick="onlyOne(this); multi_surface(true);">
                     <label for="Surface_file_">Multi Surface</label>
                 </div>
             </div>
@@ -49,17 +49,17 @@
                 <div class="surface">
 
                     <label class="check-container">Roof
-                    <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty()" checked>
+                    <input class="check" type="checkbox" id="roof_" name="roof_" onclick="onlyOne(this),surface_ty(); DisplayCondition(GetValueById('roof_type'));" checked>
                     <span class="checkmark"></span>
                     </label>
                     
                     <label class="check-container">Road
-                    <input class="check" type="checkbox" id="road_" name="road_" onclick="onlyOne(this),surface_ty()">
+                    <input class="check" type="checkbox" id="road_" name="road_" onclick="onlyOne(this),surface_ty(); DisplayCondition(GetValueById('road_type'));">
                     <span class="checkmark"></span>
                     </label>
                     
                     <label class="check-container">Carpark
-                    <input class="check" type="checkbox" id="carpark_" name="carpark_" onclick="onlyOne(this),surface_ty()">
+                    <input class="check" type="checkbox" id="carpark_" name="carpark_" onclick="onlyOne(this),surface_ty(); DisplayCondition(GetValueById('carpark_type'));">
                     <span class="checkmark"></span>
                     </label>
                 </div>
@@ -70,12 +70,15 @@
                     <i class="suffix">m<sup>2</sup></i>
                 </div>
 
-
+                
                 <div id="roof" class="select-container">
-                    <select name="roof_type" id="roof_type" class="selection" method="POST" required>
+                    <a class="info-icon" href="#">
+                        <i class='bx bx-info-circle'></i>
+                    </a>
+                    <select name="roof_type" id="roof_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                         <option value="">-- Select Material --</option>
                         {% for type in roof_type %}
-                        <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                        <option value="{{ type[0] }}" class="option" >{{ type[2] }}</option>
                         {% endfor %}
                     </select>
                     <div class="icon-container">
@@ -84,7 +87,10 @@
                 </div>
 
                 <div id="road" style="display: none;" class="select-container">
-                    <select name="road_type" id="road_type" class="selection" method="POST" required>
+                    <a class="info-icon" href="#">
+                        <i class='bx bx-info-circle'></i>
+                    </a>
+                    <select name="road_type" id="road_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                         <option value="">-- Select Material --</option>
                         {% for type in road_type %}
                         <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
@@ -96,7 +102,10 @@
                 </div>
 
                 <div id="carpark" style="display: none;" class="select-container">
-                    <select name="carpark_type" id="carpark_type" class="selection" method="POST" required>
+                    <a class="info-icon" href="#">
+                        <i class='bx bx-info-circle'></i>
+                    </a>
+                    <select name="carpark_type" id="carpark_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                         <option value="">-- Select Material --</option>
                         {% for type in carpark_type %}
                         <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
@@ -106,6 +115,20 @@
                         <i class='bx bx-chevron-down'></i>
                     </div>
                 </div>
+
+                {% for i in condition_data %}
+                <div id="{{ i[0] }}" style="display: none;" class="select-container">
+                    <select id="select{{ i[0] }}" name="{{ i[0] }}" class="selection" method="POST">
+                        <option value="">-- Select Condition --</option>
+                        {% for x in i[1] %}
+                        <option value="{{ x[0] }}" class="option">{{ x[1] }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="icon-container">
+                        <i class='bx bx-chevron-down'></i>
+                    </div>
+                </div>
+                {% endfor %}
 
             </div>
 
@@ -171,12 +194,35 @@
     {% endif %}
 </div>
     <script>
+        var last_contition_id = "";
+        function DisplayCondition(condition_id) {
+            try {
+                document.getElementById(last_contition_id).style.display = "none";
+                document.getElementById("select"+last_contition_id).removeAttribute("required");
+            }
+            catch {
+            }
+
+            try {
+                document.getElementById(condition_id).style.display = "flex";
+                document.getElementById("select"+condition_id).setAttribute("required", "required");
+            }
+            catch {
+            }
+
+            last_contition_id = condition_id;
+        }
+
         function downloadURL(url, name) {
             var link = document.createElement("a");
             link.download = name;
             link.href = url;
             link.click();
             link.remove();
+        }
+
+        function GetValueById(id){
+            return document.getElementById(id).value;getElementById
         }
 
         function multi_surface(multi) {
