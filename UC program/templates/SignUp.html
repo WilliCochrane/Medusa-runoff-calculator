@@ -48,7 +48,7 @@
     <script>
         document.getElementById("SignUp-username").onkeypress = function(e) {
             var chr = String.fromCharCode(e.which);
-            if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".indexOf(chr) >= 0)
+            if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_.@".indexOf(chr) >= 0)
                 return true;
             else 
                 return false;

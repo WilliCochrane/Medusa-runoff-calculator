@@ -1044,7 +1044,7 @@ def Admin():
 
     users = do_sql('''SELECT username,email,id FROM User WHERE administrator=0;''', None)
     print(users)
-    return render_template('Admin.html', login_text=get_login_text(), \
+    return render_template('Admin.html', login_text=get_login_text(),
                            admin=admin, users=users)
 
 
