@@ -659,3 +659,18 @@ input::-webkit-inner-spin-button {
 .info-icon :hover {
   color:#0088a9;
 }
+
+.Admin-List {
+  display: grid;
+  grid-template-columns: 1fr 1fr 70px;
+}
+
+.Admin-Wrapper {
+  width: 50vw;
+  margin: auto;
+  border-radius: 10px;
+  padding: 30px 40px;
+  border: 2px solid rgba(237, 240, 241, 0.2);
+  transition: all ease-in-out 0.3s;
+  box-shadow: 0 0 60px rgba(255, 255, 255, 0.05);
+}

@@ -20,6 +20,9 @@
                 <li><a href="/">Home</a></li>
                 <li><a href="/Single_Event">Single Event Simulation</a></li>
                 <li><a href="/Multi_Event">Multi Event Simulation</a></li>
+                {% if admin %}
+                <li><a href="/Admin">Admin</a></li>
+                {% endif %}
             </ul>
         </nav>
         <a class="login" href="/Login"><button>{{ login_text }}</button></a>
@@ -31,7 +34,7 @@
     
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 William Cochrane</p>
+            <p>&copy; 2025 William Cochrane</p>
         </div>
     </footer>
 </body>

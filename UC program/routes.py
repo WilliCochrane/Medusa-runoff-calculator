@@ -467,7 +467,6 @@ def number_of_surfaces() -> int:
     return len(surfaces)
 
 
-
 def make_filepath_avalable(filepath : str):
     try:
         # if there is already a prexisting file then remove it
@@ -549,7 +548,6 @@ def send_email(recieving_email : str, subject : str, text : str, html : str):
     part2 = MIMEText(html, "html")
 
 
-
 def send_reset_email(recieving_email : str) -> bool:  # returns wherther or not it worked
     pass
 
@@ -582,9 +580,22 @@ def Setup_data():
     return [roof_type, road_type, carpark_type, material_condition_data]
 
 
+def check_if_admin() -> bool:
+    try:
+        username = session['username']
+        value = do_sql('''SELECT administrator FROM User WHERE username="{}";'''.format(username), None)
+        if value[0][0] == 1:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
 @app.route('/')
 def Home_Page():
-    return render_template('index.html', login_text=get_login_text())
+    admin = check_if_admin()
+    return render_template('index.html', admin=admin, login_text=get_login_text())
 
 
 @app.route('/Multi_Event')
@@ -598,6 +609,8 @@ def Multi_Event():
         condition_data = setupData[3]
         username = session['username']
 
+        admin = check_if_admin()
+
         # gets all files uploaded from the user
         files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
                        File_data.file_type=1 and File_data.user_id=User.id and
@@ -606,6 +619,7 @@ def Multi_Event():
                                files=files, road_type=road_type,
                                carpark_type=carpark_type,
                                condition_data=condition_data,
+                               admin=admin,
                                login_text=get_login_text())
     else:  # not logged in then dont let user do multi event sim
         return render_template('needToLogin.html', login_text=get_login_text())
@@ -613,6 +627,9 @@ def Multi_Event():
 
 @app.route('/Single_Event')
 def Single_Event():
+
+    admin = check_if_admin()
+
     # gets the materials for each surface
     setupData = Setup_data()
     roof_type = setupData[0]
@@ -620,6 +637,7 @@ def Single_Event():
     carpark_type = setupData[2]
     condition_data = setupData[3]
     return render_template('Single_Event.html', roof_type=roof_type,
+                           admin=admin,
                            road_type=road_type, carpark_type=carpark_type,
                            condition_data=condition_data,
                            login_text=get_login_text())
@@ -628,6 +646,7 @@ def Single_Event():
 @app.route('/Single_Event', methods=['POST'])
 def Single_Event_POST():
     # gets the materials for each surface
+    admin = check_if_admin()
     setupData = Setup_data()
     roof_type = setupData[0]
     road_type = setupData[1]
@@ -652,6 +671,7 @@ def Single_Event_POST():
         # checks if pH is within acceptable range else throws error
         if PH > 7.1 or PH < 4:
             return render_template('Single_Event.html', roof_type=roof_type,
+                                   admin=admin,
                                    road_type=road_type, carpark_type=carpark_type,
                                    error=True, error_message="pH isn't between 4 and 7.1",
                                    login_text=get_login_text())
@@ -659,6 +679,7 @@ def Single_Event_POST():
         data = calculateRunoff(Area, ADD, INT, DUR, PH, Type)
         input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
         return render_template('Single_Event.html', roof_type=roof_type,
+                               admin=admin,
                                road_type=road_type, carpark_type=carpark_type,
                                input_data=input_data, data=data, single=single,
                                condition_data=condition_data,
@@ -666,6 +687,7 @@ def Single_Event_POST():
     except:
         # if code breaks return error
         return render_template('Single_Event.html', roof_type=roof_type,
+                               admin=admin,
                                road_type=road_type, carpark_type=carpark_type,
                                error=True, error_message="Invalid data",
                                condition_data=condition_data,
@@ -687,6 +709,8 @@ def Multi_Event_POST():
         multi_surface = False
 
         username = session['username']
+
+        admin = check_if_admin()
         #  Gats the name of the correct surface and type
         files = do_sql('''SELECT File_data.name, File_data.path FROM File_data,
                        User WHERE File_data.file_type=1 and
@@ -714,6 +738,7 @@ def Multi_Event_POST():
             except:
                 # if area is broken then return error
                 return render_template('Multi_Event.html', error=True,
+                                    admin=admin,
                                     error_message='Invalid data',
                                     condition_data=condition_data,
                                     roof_type=roof_type,
@@ -723,6 +748,7 @@ def Multi_Event_POST():
                                     login_text=get_login_text())
             if Area <= 0:
                 return render_template('Multi_Event.html', error=True,
+                                    admin=admin,
                                     error_message="Area can't be less than or equal to  0",
                                     condition_data=condition_data,
                                     roof_type=roof_type, files=files,
@@ -743,6 +769,7 @@ def Multi_Event_POST():
             if not check_file_name(file_name):
                 # error if file name exists under the current user
                 return render_template('Multi_Event.html', error=True,
+                                       admin=admin,
                                        error_message='File name already used',
                                        condition_data=condition_data,
                                        roof_type=roof_type, files=files,
@@ -782,6 +809,7 @@ def Multi_Event_POST():
                 output_data = "/static/output/" + username + ".csv"
 
             return render_template('Multi_Event.html', roof_type=roof_type,
+                                   admin=admin,
                                    road_type=road_type, single_surface=True,
                                    condition_data=condition_data,
                                    carpark_type=carpark_type,
@@ -813,11 +841,13 @@ def Multi_Event_POST():
 
 @app.route('/Login')
 def Login():
-    return render_template('Login.html', login_text=get_login_text())
+    admin = check_if_admin()
+    return render_template('Login.html', admin=admin, login_text=get_login_text())
 
 
 @app.route('/Login', methods=['POST'])
 def Login_Post():
+    admin = check_if_admin()
     username = request.form['username']
     # encrypted and hashed password
     password = hashlib.sha256(request.form['password'].encode('utf-8')).hexdigest()
@@ -827,17 +857,21 @@ def Login_Post():
             # sets session to username if correct user input and redirects
             session['username'] = username
             return redirect(url_for('Home_Page'))
-    return render_template('Login.html', error=True, login_text=get_login_text())
+    return render_template('Login.html', error=True, login_text=get_login_text(),
+                           admin=admin)
 
 
 @app.route('/SignUp')
 def Sign_Up():
-    return render_template('SignUp.html', error=False, login_text=get_login_text())
+    admin = check_if_admin()
+    return render_template('SignUp.html', error=False, login_text=get_login_text(),
+                           admin=admin)
 
 
 @app.route('/SignUp', methods=['POST'])
 def Sign_Up_Post():
     # get user inputs
+    admin = check_if_admin()
     username = request.form['username']
     password = request.form['password']
     redoPassword = request.form['redoPassword']
@@ -849,6 +883,7 @@ def Sign_Up_Post():
     if len(username) < 6:
         print("username too short")
         return render_template('SignUp.html', error=True, username_error=True,
+                               admin=admin,
                                error_message="Username has to be at least 6 characters",
                                login_text=get_login_text())
 
@@ -858,6 +893,7 @@ def Sign_Up_Post():
             print("unavalable username")
             return render_template('SignUp.html', error=True,
                                    username_error=True,
+                                   admin=admin,
                                    error_message="Username already exists",
                                    login_text=get_login_text())
 
@@ -865,6 +901,7 @@ def Sign_Up_Post():
     if not check_email(email):
         print("Invalid email address")
         return render_template('SignUp.html', error=True, email_error=True,
+                               admin=admin,
                                error_message="Invalid email address",
                                login_text=get_login_text())
 
@@ -872,6 +909,7 @@ def Sign_Up_Post():
     if len(password) < 8:
         print('password too short')
         return render_template('SignUp.html', error=True, password_error=True,
+                               admin=admin,
                                error_message="Password is less than 8 characters",
                                login_text=get_login_text())
 
@@ -879,6 +917,7 @@ def Sign_Up_Post():
     if redoPassword != password:
         print("non matching passwords")
         return render_template('SignUp.html', error=True, password_error=True,
+                               admin=admin,
                                error_message="Passwords do not match",
                                login_text=get_login_text())
 
@@ -894,7 +933,9 @@ def Sign_Up_Post():
 
 @app.route('/Privacy_Policy')
 def PrivacyPolicy():
-    return render_template('Privacy_policy.html', login_text=get_login_text())
+    admin=check_if_admin()
+    return render_template('Privacy_policy.html', login_text=get_login_text(),
+                           admin=admin)
 
 
 @app.route('/Checkout')
@@ -997,14 +1038,29 @@ def webhook_received():
     return jsonify({'status': 'success'})
 
 
+@app.route('/Admin')
+def Admin():
+    admin = check_if_admin()
+
+    users = do_sql('''SELECT username,email,id FROM User WHERE administrator=0;''', None)
+    print(users)
+    return render_template('Admin.html', login_text=get_login_text(), \
+                           admin=admin, users=users)
+
+
+
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
-    return render_template('404page.html', login_text=get_login_text())
+    admin=check_if_admin()
+    return render_template('404page.html', login_text=get_login_text(),
+                           admin=admin)
 
 
 @app.errorhandler(500)
 def Server_error(error):
-    return render_template('500 page', login_text=get_login_text())
+    admin=check_if_admin()
+    return render_template('500 page', login_text=get_login_text(),
+                           admin=admin)
 
 
 if __name__ == "__main__":  # Last lines

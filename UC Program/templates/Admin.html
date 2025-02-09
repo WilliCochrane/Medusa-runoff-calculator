@@ -1,0 +1,19 @@
+{%extends 'layout.html'%}
+{% block content %}
+<div class="flex-align">
+    <div class="Admin-Wrapper">
+        <div class="Admin-List">
+            <b>Username</b>
+            <b>Email</b>
+        </div>
+       <br>
+        {% for user in users %}
+        <div class="Admin-List">
+            <p>{{user[0]}}</p>
+            <p>{{user[1]}}</p>
+            <button value="{{user[2]}}"><i class='bx bxs-trash'></i></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
