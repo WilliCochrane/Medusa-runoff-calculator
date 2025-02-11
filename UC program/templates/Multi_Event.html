@@ -18,6 +18,14 @@
             </a>
         </div>
     </div>
+    {% elif multiSurface %}
+        <div class="output">
+            <div class="output-container" style="grid-template-columns: 1fr;width: fit-content;">
+                <a href="{{ output_file }}" download class="output-file">
+                    <button type="menu">Results <i class='bx bxs-download'></i></button>
+                </a>
+            </div>
+        </div>
     {% else %}
     <br>
     {% endif %}
