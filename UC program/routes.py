@@ -350,7 +350,7 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
         sumamrySheet.write(0, 10, "TCu Standard Deviation(mg)")
         rowNumber = 0
         for row in surfaceCsvReader:
-            if row[0].isalpha() or row[1].isalpha() or int(row[0]) > 18:
+            if not row[0].isnumeric() or not row[1].isnumeric() or int(row[0]) > 18:
                 pass
             else:
                 rowNumber += 1
@@ -698,6 +698,7 @@ def Single_Event_POST():
 def Multi_Event_POST():
     if check_login():
         # variables for render template
+        multiSurface = False
         setupData = Setup_data()
         roof_type = setupData[0]
         road_type = setupData[1]
@@ -800,6 +801,8 @@ def Multi_Event_POST():
                 input_data = ("1", "2", "3")
                 graph_data = None
                 output_data = multi_surface_to_xlsl(file, surface_file, username)
+                graph = False
+                multiSurface = True
             else:
                 data = csv_to_data(file, Area, Type, surface)
                 # data based on user input
@@ -809,7 +812,7 @@ def Multi_Event_POST():
                 output_data = "/static/output/" + username + ".csv"
 
             return render_template('Multi_Event.html', roof_type=roof_type,
-                                   admin=admin,
+                                   admin=admin, multiSurface=multiSurface,
                                    road_type=road_type, single_surface=True,
                                    condition_data=condition_data,
                                    carpark_type=carpark_type,
