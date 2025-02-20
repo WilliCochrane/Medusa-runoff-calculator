@@ -3,7 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor, sqrt
-import random 
+import random
 import string
 import smtplib, ssl
 import hashlib
@@ -168,7 +168,7 @@ def calculateRunoff(Area : float, ADD : float, INT : float, DUR : float, PH : fl
     flowRate = volume/DUR/60
     data = [TSS, TZn, DZn, TCu, DCu, volume,
             flowRate, CTSS, CTZn, CDZn, CTCu, CDCu]
-    
+
     sigfig = 3
     # Rouds all data to 3 s.f
     for i in range(len(data)):
@@ -264,15 +264,15 @@ def data_to_csv(filepath, username, data):
             row = i[1]
             row.insert(0, i[0])
             writer.writerow(row)
-    
-   # zipFilepath = filedir + username + ".zip"
 
-   # zip = zipfile.ZipFile(zipFilepath, "w", zipfile.ZIP_DEFLATED)
-   # zip.write(filedir + filepath)
-   # zip.close()
-   # os.rename(filedir + zipFilepath, filedir + "static/output/" + zipFilepath)
-   # os.remove(filedir + filepath)
-   # os.remove(climateFilepath)
+    # zipFilepath = filedir + username + ".zip"
+
+    # zip = zipfile.ZipFile(zipFilepath, "w", zipfile.ZIP_DEFLATED)
+    # zip.write(filedir + filepath)
+    # zip.close()
+    # os.rename(filedir + zipFilepath, filedir + "static/output/" + zipFilepath)
+    # os.remove(filedir + filepath)
+    # os.remove(climateFilepath)
 
 
 # retrns the material and the surface(roof, road, or carpark)
@@ -322,7 +322,7 @@ def get_material_name(material) -> str:
     return mat[0][0]
 
 
-def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username : str):    
+def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username : str):
     print("calculating")
     climateData = []
     with open(climateFilepath, newline='') as climateCsvFile:
@@ -331,7 +331,7 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
              if row[1] != '' and row[1].isalpha() == False:
                 climateData.append(row)
     wb = xlwt.Workbook()
-    
+
     with open(surfaceFilepath, newline='') as surfaceCsvFile:
         num_of_surfaces = number_of_surfaces()
         surfaceCsvReader = csv.reader(surfaceCsvFile)
@@ -447,7 +447,7 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
                 sumamrySheet.write(rowNumber, 10, TCuStandDev)
 
     filepath = username + ".xls"
-    zipFilepath = username +".zip"
+    zipFilepath = username + ".zip"
     
     make_filepath_avalable(surfaceFilepath)
     make_filepath_avalable("static/output/" + zipFilepath)
@@ -459,7 +459,7 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
     os.rename(zipFilepath, filedir + "static/output/" + zipFilepath)
     os.remove(filepath)
 
-    return filedir + "static/output/" + zipFilepath
+    return "static/output/" + zipFilepath
 
 
 def number_of_surfaces() -> int:
