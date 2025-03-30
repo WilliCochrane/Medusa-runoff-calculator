@@ -3,8 +3,6 @@ from flask import Flask, request, render_template, session, redirect, url_for, j
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import InputRequired, Length, ValidationError
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
@@ -19,6 +17,7 @@ import xlwt
 import csv
 import os
 
+
 stripe_keys = {
     "secret_key": "sk_test_51QEKXbASoVcyVGhrVn85dRlBcFTOLwkFjXrce6BCyzYIhQoN92EUNCPgkmXcMfl3JGDgK9OhjUeBnZqjg1jXS6cO00gpwYzXCf",
     "publishable_key": "pk_test_51QEKXbASoVcyVGhr4P0zhYDur1yO2BazoOhUkmhvWAGSm9meP3VbzuzbvmV32cHyaoNXE6isvUPdC3RrrHBx4bHL00QyqwfOE9",
@@ -30,6 +29,7 @@ stripe.api_key = stripe_keys["secret_key"]
 
 # This bellow is just for ease of use with pythonanywhere
 filedir =  os.path.abspath(os.path.dirname(__file__))
+static_dir= os.path.join(filedir, 'static')
 #domain = 'http://localhost:4242'
 domain = "http://127.0.0.1:4242/"
 UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
@@ -38,7 +38,11 @@ app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'  # No looking
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(filedir, "database.db")
 app.config['SECRET_KEY'] = '1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
 
-db = SQLAlchemy(app)
+db = SQLAlchemy()
+db.init_app(app)
+
+import app.models as models
+import app.forms as forms
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -47,35 +51,8 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return models.User.query.get(int(user_id))
 
-
-class User(db.Model, UserMixin):
-    __tablename__ = "User"
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(25), unique=True)
-    password = db.Column(db.String(200))
-    email = db.Column(db.String(254))
-
-
-
-class RegisterForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(max=25)])
-    email = StringField(validators=[InputRequired(), Length(max=254)])    
-    password = PasswordField(validators=[InputRequired(), Length(max=50)])
-    confirm_password = PasswordField(validators=[InputRequired(), Length(max=50)])
-    
-    submit = SubmitField("Register")
-
-
-class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(
-         max=25)], render_kw={"placeholder": "Username"})
-    
-    password = PasswordField(validators=[InputRequired(), Length(
-        max=50)], render_kw={"placeholder": "Password"})
-    
-    submit = SubmitField("Login")
 
 
 def do_sql(sql, values) -> list:
@@ -643,7 +620,7 @@ def check_if_admin() -> bool:
 @app.route('/')
 def Home_Page():
     admin = check_if_admin()
-    print(User.query.all())
+    print(models.User.query.all())
     return render_template('index.html', admin=admin, login_text=get_login_text())
 
 
@@ -894,7 +871,7 @@ def Multi_Event_POST():
 @app.route('/Login')
 def Login():
     admin = check_if_admin()
-    form = LoginForm()
+    form = forms.Login()
     return render_template('Login.html', admin=admin, login_text=get_login_text(),form=form)
 
 
@@ -917,13 +894,13 @@ def Login_Post():
 
 @app.route('/SignUp', methods=['GET','POST'])
 def Sign_Up():
-    form = RegisterForm()
+    form = forms.Register()
 
     error = False
     error_message = ""
 
     if form.validate_on_submit():
-        existing_user_username = User.query.filter_by(
+        existing_user_username = models.User.query.filter_by(
         username=form.username.data).first()
         if existing_user_username:
             error = True
@@ -943,7 +920,7 @@ def Sign_Up():
         if not error:    
             hashed_password = hashlib.sha256(form.password.data.encode('utf-8')).hexdigest()
             print(len(hashed_password))
-            new_user = User(username=form.username.data, password=hashed_password, email=form.email.data)
+            new_user = models.User(username=form.username.data, password=hashed_password, email=form.email.data)
             db.session.add(new_user)
             db.session.commit()
             return redirect(url_for('Home_Page'))
@@ -1064,8 +1041,6 @@ def Admin():
 def get_publishable_key():
     stripe_config = {"publicKey": stripe_keys["publishable_key"]}
     return jsonify(stripe_config)
-
-
 
 
 @app.route('/create-checkout-session', methods=['POST'])
