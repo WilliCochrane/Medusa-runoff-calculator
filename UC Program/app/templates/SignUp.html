@@ -4,28 +4,26 @@
         <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
             <form action="" method="POST" enctype="multipart/form-data">
                 <h1>Sign Up</h1>
+                {{ form.hidden_tag() }}
                 <div class="input-box" {% if username_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %} value='' onpaste="return false">
-                    <input type="text" id="SignUp-username" 
-                    name="username" required maxlength="25">
+                    {{ form.username }}
                     <p>Username</p>
                     <i class='bx bxs-user'></i>
                 </div>
+
                 <div class="input-box" {% if email_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
-                    <input type="text" id="SignUp-email" name="email"
-                    name="email" required maxlength="254">
+                    {{ form.email }}
                     <p>Email</p>
                     <i class='bx bx-envelope' ></i>
                 </div>
                 <div class="input-box" {% if password_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
-                    <input type="password" id="SignUp-password" 
-                    name="password" required maxlength="50">
+                    {{ form.password }}
                     <p>Password</p>
                     <i class='bx bxs-lock-alt'></i>
                 </div>
                 <div class="input-box">
-                    <input type="password" id="SignUp-redoPassword" 
-                    name="redoPassword" required maxlength="50">
-                    <p>Password again</p>
+                    {{ form.confirm_password }}
+                    <p>Confirm Password</p>
                     <i class='bx bxs-lock-alt'></i>
                 </div>
                 <p class="error">{{ error_message }}</p><br>
@@ -36,7 +34,7 @@
                         <a href="/Privacy_Policy">Privacy Policy</a>
                     </label>
                 </div>
-                <button type="submit" class="login-submit">Register</button>
+                <button type="submit" class="login-submit">{{ form.submit }}</button>
                 
                 <div class="register-link">
                     <p>Already have an account? 

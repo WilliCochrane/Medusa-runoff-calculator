@@ -8,3 +8,5 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('session-id').setAttribute('value', session_id);
     }
   });
+
+console.log("Degub");

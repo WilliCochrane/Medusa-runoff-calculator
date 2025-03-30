@@ -10,6 +10,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/static/Image/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/Image/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
+    <script src="/static/main.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
     <title>MEDUSA</title>
 </head>
 <body>
@@ -20,6 +22,7 @@
                 <li><a href="/">Home</a></li>
                 <li><a href="/Single_Event">Single Event Simulation</a></li>
                 <li><a href="/Multi_Event">Multi Event Simulation</a></li>
+                <li><a href="/Checkout">checkout</a></li>
                 {% if admin %}
                 <li><a href="/Admin">Admin</a></li>
                 {% endif %}

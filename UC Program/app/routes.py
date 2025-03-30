@@ -1,13 +1,17 @@
+from app import app
 from flask import Flask, request, render_template, session, redirect, url_for, jsonify, json, current_app
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import InputRequired, Length, ValidationError
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor, sqrt
 import random
 import string
-import smtplib, ssl
 import hashlib
-import sqlite3
 import zipfile
 import stripe
 import json
@@ -15,28 +19,72 @@ import xlwt
 import csv
 import os
 
-# This is your test secret API key.
-stripe.api_key = 'sk_test_51QEKXbASoVcyVGhrVn85dRlBcFTOLwkFjXrce6BCyzYIhQoN92EUNCPgkmXcMfl3JGDgK9OhjUeBnZqjg1jXS6cO00gpwYzXCf'
+stripe_keys = {
+    "secret_key": "sk_test_51QEKXbASoVcyVGhrVn85dRlBcFTOLwkFjXrce6BCyzYIhQoN92EUNCPgkmXcMfl3JGDgK9OhjUeBnZqjg1jXS6cO00gpwYzXCf",
+    "publishable_key": "pk_test_51QEKXbASoVcyVGhr4P0zhYDur1yO2BazoOhUkmhvWAGSm9meP3VbzuzbvmV32cHyaoNXE6isvUPdC3RrrHBx4bHL00QyqwfOE9",
+    "endpoint_secret": "whsec_8a53777483939cc643b64281e1e59fff728d15cb78cbf4fbdfbab074bc2ae49c",
+}
+
+stripe.api_key = stripe_keys["secret_key"]
 
 
 # This bellow is just for ease of use with pythonanywhere
-# filedir = "/home/willicochrane/"
-filedir = ""
-domain = 'http://localhost:4242'
-
-app = Flask(__name__, static_folder=filedir+"static")
+filedir =  os.path.abspath(os.path.dirname(__file__))
+#domain = 'http://localhost:4242'
+domain = "http://127.0.0.1:4242/"
 UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'  # No looking
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(filedir, "database.db")
+app.config['SECRET_KEY'] = '1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
+
+db = SQLAlchemy(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+class User(db.Model, UserMixin):
+    __tablename__ = "User"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(25), unique=True)
+    password = db.Column(db.String(200))
+    email = db.Column(db.String(254))
+
+
+
+class RegisterForm(FlaskForm):
+    username = StringField(validators=[InputRequired(), Length(max=25)])
+    email = StringField(validators=[InputRequired(), Length(max=254)])    
+    password = PasswordField(validators=[InputRequired(), Length(max=50)])
+    confirm_password = PasswordField(validators=[InputRequired(), Length(max=50)])
+    
+    submit = SubmitField("Register")
+
+
+class LoginForm(FlaskForm):
+    username = StringField(validators=[InputRequired(), Length(
+         max=25)], render_kw={"placeholder": "Username"})
+    
+    password = PasswordField(validators=[InputRequired(), Length(
+        max=50)], render_kw={"placeholder": "Password"})
+    
+    submit = SubmitField("Login")
 
 
 def do_sql(sql, values) -> list:
-    db = sqlite3.connect(filedir + 'Coefficients.db')
-    cur = db.cursor()
+    dba = sqlite3.connect(filedir + 'database.db')
+    cur = dba.cursor()
     # If the value isn't none then the change will be commited to the database
     if values is not None:
         cur.execute(sql, values)
-        db.commit()
+        dba.commit()
     else:  # If value is none then the changes will just be executed
         cur.execute(sql)
     return cur.fetchall()
@@ -595,6 +643,7 @@ def check_if_admin() -> bool:
 @app.route('/')
 def Home_Page():
     admin = check_if_admin()
+    print(User.query.all())
     return render_template('index.html', admin=admin, login_text=get_login_text())
 
 
@@ -845,11 +894,13 @@ def Multi_Event_POST():
 @app.route('/Login')
 def Login():
     admin = check_if_admin()
-    return render_template('Login.html', admin=admin, login_text=get_login_text())
+    form = LoginForm()
+    return render_template('Login.html', admin=admin, login_text=get_login_text(),form=form)
 
 
-@app.route('/Login', methods=['POST'])
+@app.route('/Login', methods=['GET','POST'])
 def Login_Post():
+
     admin = check_if_admin()
     username = request.form['username']
     # encrypted and hashed password
@@ -861,16 +912,49 @@ def Login_Post():
             session['username'] = username
             return redirect(url_for('Home_Page'))
     return render_template('Login.html', error=True, login_text=get_login_text(),
-                           admin=admin)
+                           admin=admin,)
 
 
-@app.route('/SignUp')
+@app.route('/SignUp', methods=['GET','POST'])
 def Sign_Up():
+    form = RegisterForm()
+
+    error = False
+    error_message = ""
+
+    if form.validate_on_submit():
+        existing_user_username = User.query.filter_by(
+        username=form.username.data).first()
+        if existing_user_username:
+            error = True
+            error_message = "That username already exists. Please chose another one."
+        elif form.password.data != form.confirm_password.data:
+            error = True
+            error_message = "Passwords do not match."
+        elif len(form.password.data) < 8:
+            error = True
+            error_message = "Password must be at least 8 characters long."
+        elif len(form.username.data) < 1:
+            error = True
+            error_message = "Password must be at least 1 character long."
+        elif not check_email(form.email.data):
+            error = True
+            error_message = "Invalid email"
+        if not error:    
+            hashed_password = hashlib.sha256(form.password.data.encode('utf-8')).hexdigest()
+            print(len(hashed_password))
+            new_user = User(username=form.username.data, password=hashed_password, email=form.email.data)
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect(url_for('Home_Page'))
+        else:
+            print(error_message)
+        
     admin = check_if_admin()
-    return render_template('SignUp.html', error=False, login_text=get_login_text(),
-                           admin=admin)
+    return render_template('SignUp.html', error=error, login_text=get_login_text(),
+                           admin=admin, form=form, error_message=error_message)
 
-
+'''
 @app.route('/SignUp', methods=['POST'])
 def Sign_Up_Post():
     # get user inputs
@@ -932,7 +1016,7 @@ def Sign_Up_Post():
     # log in the user and redirect to home
     session['username'] = username
     return redirect(url_for('Home_Page'))
-
+'''
 
 @app.route('/Privacy_Policy')
 def PrivacyPolicy():
@@ -943,12 +1027,45 @@ def PrivacyPolicy():
 
 @app.route('/Checkout')
 def Checkout():
-    return render_template('checkout.html')
+    admin=check_if_admin()
+    if check_login():
+        return render_template('checkout.html', login_text=get_login_text(),
+                           admin=admin)
+    else:
+        return redirect(url_for('Home_Page'))
 
 
-@app.route('/Sucess')
+@app.route('/Success')
 def Success():
-    return render_template('success.html')
+    admin=check_if_admin()
+    return render_template('success.html', login_text=get_login_text(),
+                           admin=admin)
+
+
+@app.route('/Cancelled')
+def Cancelled():
+    admin=check_if_admin()
+    return render_template('cancel.html', login_text=get_login_text(),
+                           admin=admin)
+
+
+
+@app.route('/Admin')
+def Admin():
+    admin = check_if_admin()
+
+    users = do_sql('''SELECT username,email,id FROM User WHERE administrator=0;''', None)
+    print(users)
+    return render_template('Admin.html', login_text=get_login_text(), \
+                           admin=admin, users=users)
+
+
+@app.route("/config")
+def get_publishable_key():
+    stripe_config = {"publicKey": stripe_keys["publishable_key"]}
+    return jsonify(stripe_config)
+
+
 
 
 @app.route('/create-checkout-session', methods=['POST'])
@@ -968,8 +1085,8 @@ def create_checkout_session():
             ],
             mode='subscription',
             success_url=domain +
-            '/Sucess?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=domain + '/cancel.html',
+            '/Success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=domain + '/Cancelled',
         )
         return redirect(checkout_session.url, code=303)
     except Exception as e:
@@ -995,62 +1112,75 @@ def customer_portal():
     return redirect(portalSession.url, code=303)
 
 
-@app.route('/webhook', methods=['POST'])
-def webhook_received():
-    # Replace this endpoint secret with your endpoint's unique secret
-    # If you are testing with the CLI, find the secret by running 'stripe listen'
-    # If you are using an endpoint defined with the API or dashboard, look in your webhook settings
-    # at https://dashboard.stripe.com/webhooks
-    webhook_secret = 'whsec_huw*(F1)#!D!JD(hud9G!'
-    request_data = json.loads(request.data)
+# @app.route('/webhook', methods=['POST'])
+# def webhook_received():
+#     # Replace this endpoint secret with your endpoint's unique secret
+#     # If you are testing with the CLI, find the secret by running 'stripe listen'
+#     # If you are using an endpoint defined with the API or dashboard, look in your webhook settings
+#     # at https://dashboard.stripe.com/webhooks
+#     webhook_secret = stripe_keys['secret_key']
+#     request_data = json.loads(request.data)
 
-    if webhook_secret:
-        # Retrieve the event by verifying the signature using the raw body and secret if webhook signing is configured.
-        signature = request.headers.get('stripe-signature')
-        try:
-            event = stripe.Webhook.construct_event(
-                payload=request.data, sig_header=signature, secret=webhook_secret)
-            data = event['data']
-        except Exception as e:
-            return e
-        # Get the type of webhook event sent - used to check the status of PaymentIntents.
-        event_type = event['type']
-    else:
-        data = request_data['data']
-        event_type = request_data['type']
-    data_object = data['object']
+#     if webhook_secret:
+#         # Retrieve the event by verifying the signature using the raw body and secret if webhook signing is configured.
+#         signature = request.headers.get('stripe-signature')
+#         try:
+#             event = stripe.Webhook.construct_event(
+#                 payload=request.data, sig_header=signature, secret=webhook_secret)
+#             data = event['data']
+#         except Exception as e:
+#             return e
+#         # Get the type of webhook event sent - used to check the status of PaymentIntents.
+#         event_type = event['type']
+#     else:
+#         data = request_data['data']
+#         event_type = request_data['type']
+#     data_object = data['object']
 
-    print('event ' + event_type)
+#     print('event ' + event_type)
 
-    if event_type == 'checkout.session.completed':
-        print('🔔 Payment succeeded!')
-    elif event_type == 'customer.subscription.trial_will_end':
-        print('Subscription trial will end')
-    elif event_type == 'customer.subscription.created':
-        print('Subscription created %s', event.id)
-    elif event_type == 'customer.subscription.updated':
-        print('Subscription created %s', event.id)
-    elif event_type == 'customer.subscription.deleted':
-        # handle subscription canceled automatically based
-        # upon your subscription settings. Or if the user cancels it.
-        print('Subscription canceled: %s', event.id)
-    elif event_type == 'entitlements.active_entitlement_summary.updated':
-        # handle active entitlement summary updated
-        print('Active entitlement summary updated: %s', event.id)
+#     if event_type == 'checkout.session.completed':
+#         print('🔔 Payment succeeded!')
+#     elif event_type == 'customer.subscription.trial_will_end':
+#         print('Subscription trial will end')
+#     elif event_type == 'customer.subscription.created':
+#         print('Subscription created %s', event.id)
+#     elif event_type == 'customer.subscription.updated':
+#         print('Subscription created %s', event.id)
+#     elif event_type == 'customer.subscription.deleted':
+#         # handle subscription canceled automatically based
+#         # upon your subscription settings. Or if the user cancels it.
+#         print('Subscription canceled: %s', event.id)
+#     elif event_type == 'entitlements.active_entitlement_summary.updated':
+#         # handle active entitlement summary updated
+#         print('Active entitlement summary updated: %s', event.id)
 
-    return jsonify({'status': 'success'})
+#     return jsonify({'status': 'success'})
 
+@app.route("/webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get("Stripe-Signature")
 
-@app.route('/Admin')
-def Admin():
-    admin = check_if_admin()
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, stripe_keys["endpoint_secret"]
+        )
+    
+    except ValueError as e:
+        # Invalid payload
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return "Invalid signature", 400
 
-    users = do_sql('''SELECT username,email,id FROM User WHERE administrator=0;''', None)
-    print(users)
-    return render_template('Admin.html', login_text=get_login_text(),
-                           admin=admin, users=users)
+    # Handle the checkout.session.completed event
+    if event["type"] == "checkout.session.completed":
+        print("Payment was successful.")
+        print(session['username'] )
+        # TODO: run some custom code here
 
-
+    return "Success", 200
 
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
@@ -1064,7 +1194,3 @@ def Server_error(error):
     admin=check_if_admin()
     return render_template('500 page', login_text=get_login_text(),
                            admin=admin)
-
-
-if __name__ == "__main__":  # Last lines
-    app.run(debug=True, port=4242)
