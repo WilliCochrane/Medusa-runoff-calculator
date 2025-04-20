@@ -348,10 +348,23 @@ input::-webkit-inner-spin-button {
 .wrapper .login-submit {
   width: 100%;
   height: 45px;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
   font-weight: 600;
 }
 
+.login-submit input{
+  font-size: 16px;
+  padding: 9px 25px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  background-color: rgba(0,136,169,1);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease 0s;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  width: 100%;
+  height: 100%;
+}
 
 .wrapper .register-link {
   font-size: 14.5px;
@@ -375,6 +388,12 @@ input::-webkit-inner-spin-button {
 .remember-forgot label input {
   accent-color: #edf0f1;
   margin-right: 3px;
+  translate: 0 2px;
+
+}
+
+.remember-forgot label{
+  justify-content: center;
 }
 
 .remember-forgot a:hover {

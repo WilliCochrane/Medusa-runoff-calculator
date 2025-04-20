@@ -1,8 +1,9 @@
 {%extends 'layout.html'%}
 {% block content %}
 <form action="" method="POST" enctype="multipart/form-data"> 
+    {{ form.hidden_tag() }}
     <div class="flex-align">
-        {% if single %}
+        {% if output %}
         <div class="output">
             <div class="output-container">
                 <h1>Input</h1><br>
@@ -44,8 +45,7 @@
                 
             </div>
             <div class="input-box">
-                <input type="text" id="SE-area" value='' onpaste="return false"
-                name="area" required maxlength="30">
+                {{ form.Area }}
                 <p>Area</p>
                 <i class="suffix">m<sup>2</sup></i>
             </div>
@@ -59,7 +59,7 @@
                 <select name="roof_type" id="roof_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                     <option value="">-- Select Material --</option>
                     {% for type in roof_type %}
-                    <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                    <option value="{{ type.id }}" class="option">{{ type.name }}</option>
                     {% endfor %}
                 </select>
                 <div class="icon-container">
@@ -73,7 +73,7 @@
                 <select name="road_type" id="road_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                     <option value="">-- Select Material --</option>
                     {% for type in road_type %}
-                    <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                    <option value="{{ type.id }}" class="option">{{ type.name }}</option>
                     {% endfor %}
                 </select>
                 <div class="icon-container">
@@ -87,7 +87,7 @@
                 <select name="carpark_type" id="carpark_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                     <option value="">-- Select Material --</option>
                     {% for type in carpark_type %}
-                    <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                    <option value="{{ type.id }}" class="option">{{ type.name }}</option>
                     {% endfor %}
                 </select>
                 <div class="icon-container">
@@ -111,32 +111,28 @@
 
 
             <div class="input-box">
-                <input type="text" id="ADDipt" 
-                name="ADD" value='' onpaste="return false" required maxlength="25">
+                {{ form.ADD }}
                 <p>ADD</p>
                 <i class="suffix">day</i>
             </div>
             
             <div class="input-box">
-                <input class="" type="text" id="INTipt" 
-                name="INT" value='' onpaste="return false" required maxlength="25">
+                {{ form.INT }}
                 <p>Intensity</p>
                 <i class="suffix">mm/h</i>
             </div>
             <div class="input-box">
-                <input type="text" id="DURipt" 
-                name="DUR" value='' onpaste="return false" required maxlength="25">
+                {{ form.DUR }}
                 <p>Duration</p>
                 <i class="suffix">h</i>
             </div>
             <div class="input-box">
-                <input type="text" id="PHipt" 
-                name="PH" min="0" value='' onpaste="return false" required maxlength="25">
+                {{ form.pH }}
                 <p>pH</p>
             </div>
-            <button type="submit" class="submit" id="submit">Submit</button>
+            <div  class="login-submit">{{ form.submit }}</div>
         </div>
-        {% if single %}
+        {% if output %}
         <div class="output">
             <div class="output-container">
                 <h1>Output</h1><br>
@@ -234,13 +230,13 @@
     surface_ty();
 
 
-    document.getElementById("SE-area").onkeypress = function(e) {
+    document.getElementById("Area").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
         if ("0123456789".indexOf(chr) >= 0) {
             return true;
         }
         else if (".".indexOf(chr) >= 0) {
-            if (document.getElementById("SE-area").value.indexOf(".") >= 0) {
+            if (document.getElementById("Area").value.indexOf(".") >= 0) {
                 return false;
             }
             else 
@@ -250,12 +246,12 @@
             return false;
     };
 
-    document.getElementById("ADDipt").onkeypress = function(e) {
+    document.getElementById("ADD").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
         if ("0123456789".indexOf(chr) >= 0)
             return true;
         if (".".indexOf(chr) >= 0) {
-            if (document.getElementById("ADDipt").value.indexOf(".") >= 0){
+            if (document.getElementById("ADD").value.indexOf(".") >= 0){
                 return false;
             }
             else 
@@ -265,13 +261,13 @@
             return false;
     };
 
-    document.getElementById("INTipt").onkeypress = function(e) {
+    document.getElementById("INT").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
         if ("0123456789".indexOf(chr) >= 0) {
             return true;
         }
         else if (".".indexOf(chr) >= 0) {
-            if (document.getElementById("INTipt").value.indexOf(".") >= 0) {
+            if (document.getElementById("INT").value.indexOf(".") >= 0) {
                 return false;
             }
             else {
@@ -282,13 +278,13 @@
             return false;
     };
 
-    document.getElementById("DURipt").onkeypress = function(e) {
+    document.getElementById("DUR").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
         if ("0123456789".indexOf(chr) >= 0) {
             return true;
         }
         else if (".".indexOf(chr) >= 0) {
-            if (document.getElementById("DURipt").value.indexOf(".") >= 0) {
+            if (document.getElementById("DUR").value.indexOf(".") >= 0) {
                 return false;
             }
             else {
@@ -299,13 +295,13 @@
             return false;
     };
 
-    document.getElementById("PHipt").onkeypress = function(e) {
+    document.getElementById("pH").onkeypress = function(e) {
         var chr = String.fromCharCode(e.which);
         if ("0123456789".indexOf(chr) >= 0) {
             return true;
         }
         else if (".".indexOf(chr) >= 0) {
-            if (document.getElementById("PHipt").value.indexOf(".") >= 0) {
+            if (document.getElementById("pH").value.indexOf(".") >= 0) {
                 return false;
             }
             else {

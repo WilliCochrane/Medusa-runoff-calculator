@@ -1,12 +1,13 @@
 from app import app
 from flask import Flask, request, render_template, session, redirect, url_for, jsonify, json, current_app
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor, sqrt
+from datetime import datetime
 import random
 import string
 import hashlib
@@ -29,10 +30,10 @@ stripe.api_key = stripe_keys["secret_key"]
 
 # This bellow is just for ease of use with pythonanywhere
 filedir =  os.path.abspath(os.path.dirname(__file__))
-static_dir= os.path.join(filedir, 'static')
+static_dir = os.path.join(filedir, 'static')
 #domain = 'http://localhost:4242'
 domain = "http://127.0.0.1:4242/"
-UPLOAD_FOLDER = filedir + "UPLOAD_FOLDER"
+UPLOAD_FOLDER = filedir + "\\UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'  # No looking
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(filedir, "database.db")
@@ -78,48 +79,45 @@ def getConcentration(volume, mass) -> float:  # Calculates concentration
 
 # main calculation function
 def calculateRunoff(Area : float, ADD : float, INT : float, DUR : float, PH : float, Type : int) -> list:
-    coeff = do_sql("SELECT * FROM Coefficient WHERE id='{}';".format(Type), None)
+    material = models.Surface_Material.query.filter_by(id=Type).first()
     # The variables below are named like that in the fomulas I was provided
     # TSS Coefficients
-    a1 = coeff[0][3]
-    a2 = coeff[0][4]
-    a3 = coeff[0][5]
-    a4 = coeff[0][6]
-    a5 = coeff[0][7]
-    a6 = coeff[0][8]
-    a7 = coeff[0][9]
-    a8 = coeff[0][10]
-    a9 = coeff[0][11]
-
+    a1 = material.a1
+    a2 = material.a2
+    a3 = material.a3
+    a4 = material.a4
+    a5 = material.a5
+    a6 = material.a6
+    a7 = material.a7
+    a8 = material.a8
+    a9 = material.a9
     # Cu Coefficients
-    b1 = coeff[0][13]
-    b2 = coeff[0][14]
-    b3 = coeff[0][15]
-    b4 = coeff[0][16]
-    b5 = coeff[0][17]
-    b6 = coeff[0][18]
-    b7 = coeff[0][19]
-    b8 = coeff[0][20]
-    g1 = coeff[0][22]
-
+    b1 = material.b1 
+    b2 = material.b2
+    b3 = material.b3 
+    b4 = material.b4 
+    b5 = material.b5 
+    b6 = material.b6 
+    b7 = material.b7 
+    b8 = material.b8 
+    g1 = material.g1
     # Zn Coefficients
-    c1 = coeff[0][24]
-    c2 = coeff[0][25]
-    c3 = coeff[0][26]
-    c4 = coeff[0][27]
-    c5 = coeff[0][28]
-    c6 = coeff[0][29]
-    c7 = coeff[0][30]
-    c8 = coeff[0][31]
-    h1 = coeff[0][32]
+    c1 = material.c1
+    c2 = material.c2
+    c3 = material.c3
+    c4 = material.c4
+    c5 = material.c5
+    c6 = material.c6
+    c7 = material.c7
+    c8 = material.c8
+    h1 = material.h1
+    # Oter Coefficients
+    Z  = material.Z
+    k  = material.k
+    l1 = material.l1
+    m1 = material.m1
 
-    # Other Coefficients
-    Z = coeff[0][21]
-    k = coeff[0][12]
-    l1 = coeff[0][23]
-    m1 = coeff[0][33]
-
-    surface = coeff[0][34]
+    surface = material.surface_type
     # Calculating water volume in litres
     volume = INT * Area * DUR
 
@@ -249,7 +247,7 @@ def csv_to_data(fileDir, Area, Type, surface) -> list:
         outputData.append(['', ['']])
         # input data
         outputData.append(['Area:', [str(Area)+'m2']])
-        outputData.append(['Material:', [get_material_name(Type)]])
+        outputData.append(['Material:', [models.Surface_Material.query.filter_by(id=Type).first().name]])
         outputData.append(['Surface:', [get_surface_name(surface)]])
 
     return [graphData, outputData]
@@ -312,8 +310,8 @@ def get_surface() -> list:
         Type = request.form['carpark_type']
         surface = 3
 
-    material = do_sql("SELECT * FROM Coefficient WHERE id = '{}';".format(Type), None)
-    if material[0][35] == 1: # if the material condition type is 1 i.e. is a parent material with a condition tab
+    material = models.Surface_Material.query.filter_by(id=Type).first()
+    if material.material_condition_type == 1: # if the material condition type is 1 i.e. is a parent material with a condition tab
         Type = request.form[str(Type)]  # the selection input is named after the parent id
     return [surface, Type]
 
@@ -330,23 +328,6 @@ def get_surface_name(surface) -> str:
         return 'Invalid'
 
 
-# gets the id of the surface(road roof carpark) from type (galvanised, ect)
-def get_surface_from_type(typeInt : str, typeStr : str, isInt : bool) -> int:
-    if isInt:
-        surface = do_sql("SELECT type FROM Coefficient WHERE id = '{}'".format(typeInt), None)
-        return surface[0][0]
-    else:
-        surface = do_sql("SELECT type FROM Coefficient WHERE name = '{}'".format(typeStr), None)
-        return surface[0][0]
-
-
-
-# gats the name of the material fron material as an int
-def get_material_name(material) -> str:
-    mat = do_sql("SELECT name FROM Coefficient WHERE id = '{}';".format(material), None)
-    return mat[0][0]
-
-
 def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username : str):
     print("calculating")
     climateData = []
@@ -358,7 +339,6 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
     wb = xlwt.Workbook()
 
     with open(surfaceFilepath, newline='') as surfaceCsvFile:
-        num_of_surfaces = number_of_surfaces()
         surfaceCsvReader = csv.reader(surfaceCsvFile)
 
         sumamrySheet = wb.add_sheet("Summary")
@@ -413,7 +393,7 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
                 ws.write(3, 14, "TCu")
 
                 ws.write(5, 15, "Surface:")
-                ws.write(5, 16, get_material_name(Type))
+                ws.write(5, 16, models.Surface_Material.query.filter_by(id=Type).first().name)
                 ws.write(6, 15, "Area:")
                 ws.write(6, 16, area)
 
@@ -460,7 +440,7 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
                 ws.write(3, 17, TCuStandDev)
 
                 sumamrySheet.write(rowNumber, 0, rowNumber)
-                sumamrySheet.write(rowNumber, 1, get_material_name(Type))
+                sumamrySheet.write(rowNumber, 1, models.Surface_Material.query.filter_by(id=Type).first().name)
                 sumamrySheet.write(rowNumber, 2, TSSTotal)
                 sumamrySheet.write(rowNumber, 3, TSSAverage)
                 sumamrySheet.write(rowNumber, 4, TSSStandDev)
@@ -475,21 +455,16 @@ def multi_surface_to_xlsl(climateFilepath : str, surfaceFilepath : str, username
     zipFilepath = username + ".zip"
     
     make_filepath_avalable(surfaceFilepath)
-    make_filepath_avalable("static/output/" + zipFilepath)
+    make_filepath_avalable("app/static/output/" + zipFilepath)
 
     wb.save(filepath)
     zip = zipfile.ZipFile(zipFilepath, "w", zipfile.ZIP_DEFLATED)
     zip.write(filepath)
     zip.close()
-    os.rename(zipFilepath, filedir + "static/output/" + zipFilepath)
+    os.rename(zipFilepath, filedir + "app/static/output/" + zipFilepath)
     os.remove(filepath)
 
     return "static/output/" + zipFilepath
-
-
-def number_of_surfaces() -> int:
-    surfaces = do_sql("SELECT * FROM Coefficient;", None)
-    return len(surfaces)
 
 
 def make_filepath_avalable(filepath : str):
@@ -503,7 +478,8 @@ def make_filepath_avalable(filepath : str):
 # checks if the user is logged in
 def check_login() -> bool:
     try:
-        if session['username']:
+        print(current_user.username)
+        if current_user.username:
             return True
         else:
             return False
@@ -579,28 +555,28 @@ def send_reset_email(recieving_email : str) -> bool:  # returns wherther or not 
 
 def Setup_data():
     # gets the materials and not the conditions of the materials e.g. poor, new
-    roof_type = do_sql("SELECT * FROM Coefficient WHERE type=1 AND material_condition_type != 2;", None)
-    road_type = do_sql("SELECT * FROM Coefficient WHERE type=2 AND material_condition_type != 2;", None)
-    carpark_type = do_sql("SELECT * FROM Coefficient WHERE type=3 AND material_condition_type != 2;", None)
+    roof_type = models.Surface_Material.query.filter(models.Surface_Material.surface_type==1, 
+                                                     models.Surface_Material.material_condition_type!=2)
+    road_type = models.Surface_Material.query.filter(models.Surface_Material.surface_type==2,
+                                                      models.Surface_Material.material_condition_type!=2)
+    carpark_type = models.Surface_Material.query.filter(models.Surface_Material.surface_type==3, 
+                                                        models.Surface_Material.material_condition_type!=2)
 
-    material_conditions = do_sql("SELECT * FROM Coefficient WHERE material_condition_type = 2;", None)
+    material_conditions = models.Surface_Material.query.filter_by(material_condition_type=2)
 
     material_condition_data = []
-    # format: [[material_id, [[name, id], [name, id], [name, id]]],[material_id, [[name, id], [name, id], [name, id]]]]
+    # format: [[material_id, [[name, id], [name, id], [name, id]]],[material_id, [[name, id], [name, id], [name, id]]]
     for condition in material_conditions:
-        parent_material_id = condition[36]
-        coefficient_id = condition[0]
-        condition_name = condition[2]
-        condition_data = [coefficient_id, condition_name]
+        condition_data = [condition.id, condition.name]
 
         material_already_added = False
         for i in material_condition_data:
-            if i[0] == parent_material_id:
+            if i[0] == condition.condition_parent_id:
                 material_already_added = True
                 i[1].append(condition_data)
         
         if not material_already_added:
-            material_condition_data.append([parent_material_id, [condition_data]])
+            material_condition_data.append([condition.condition_parent_id, [condition_data]])
 
     return [roof_type, road_type, carpark_type, material_condition_data]
 
@@ -620,7 +596,6 @@ def check_if_admin() -> bool:
 @app.route('/')
 def Home_Page():
     admin = check_if_admin()
-    print(models.User.query.all())
     return render_template('index.html', admin=admin, login_text=get_login_text())
 
 
@@ -633,14 +608,11 @@ def Multi_Event():
         road_type = setupData[1]
         carpark_type = setupData[2]
         condition_data = setupData[3]
-        username = session['username']
 
         admin = check_if_admin()
 
         # gets all files uploaded from the user
-        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data, User WHERE
-                       File_data.file_type=1 and File_data.user_id=User.id and
-                       User.username="{}";'''.format(username), None)
+        files = models.File_Data.query.filter(models.File_Data.users.any(id=current_user.id)).all()
         return render_template('Multi_Event.html', roof_type=roof_type,
                                files=files, road_type=road_type,
                                carpark_type=carpark_type,
@@ -651,26 +623,11 @@ def Multi_Event():
         return render_template('needToLogin.html', login_text=get_login_text())
 
 
-@app.route('/Single_Event')
+@app.route('/Single_Event', methods=['GET','POST'])
 def Single_Event():
 
-    admin = check_if_admin()
+    form = forms.Single_Event()
 
-    # gets the materials for each surface
-    setupData = Setup_data()
-    roof_type = setupData[0]
-    road_type = setupData[1]
-    carpark_type = setupData[2]
-    condition_data = setupData[3]
-    return render_template('Single_Event.html', roof_type=roof_type,
-                           admin=admin,
-                           road_type=road_type, carpark_type=carpark_type,
-                           condition_data=condition_data,
-                           login_text=get_login_text())
-
-
-@app.route('/Single_Event', methods=['POST'])
-def Single_Event_POST():
     # gets the materials for each surface
     admin = check_if_admin()
     setupData = Setup_data()
@@ -679,45 +636,38 @@ def Single_Event_POST():
     carpark_type = setupData[2]
     condition_data = setupData[3]
     data = []
-    surface = get_surface()[0]
-    Type = get_surface()[1]
     # gets the surface based on which the material input
-    surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name
-                            FROM Coefficient,Site_type WHERE
-                            Coefficient.type=Site_type.id and
-                            Coefficient.id='{}'""".format(int(Type)), None)
-
-    try:
-        # geting all of the input variables
-        Area = float(request.form['area'])
-        ADD = float(request.form['ADD'])
-        INT = float(request.form['INT'])
-        DUR = float(request.form['DUR'])
-        PH = float(request.form['PH'])
-        # checks if pH is within acceptable range else throws error
-        if PH > 7.1 or PH < 4:
+    error=False
+    error_message=""
+    if form.validate_on_submit():
+        Type = get_surface()[1]
+        try:
+            # checks if pH is within acceptable range else throws error
+            if form.pH.data > 7.1 or form.pH.data < 4:
+                error=True
+                error_message="pH isn't between 4 and 7.1"
+            data = calculateRunoff(form.Area.data, form.ADD.data, form.INT.data, form.DUR.data, form.pH.data, Type)
+            input_data = [get_surface_name(get_surface()[0]), form.Area.data, 
+                          models.Surface_Material.query.filter_by(id=Type).first().name, 
+                          form.ADD.data, form.INT.data, form.DUR.data, form.pH.data]
             return render_template('Single_Event.html', roof_type=roof_type,
-                                   admin=admin,
-                                   road_type=road_type, carpark_type=carpark_type,
-                                   error=True, error_message="pH isn't between 4 and 7.1",
-                                   login_text=get_login_text())
-        single = True  # bool for if output
-        data = calculateRunoff(Area, ADD, INT, DUR, PH, Type)
-        input_data = [surface_n_type[0][1], Area, surface_n_type[0][0], ADD, INT, DUR, PH]
-        return render_template('Single_Event.html', roof_type=roof_type,
-                               admin=admin,
-                               road_type=road_type, carpark_type=carpark_type,
-                               input_data=input_data, data=data, single=single,
-                               condition_data=condition_data,
-                               login_text=get_login_text())
-    except:
-        # if code breaks return error
-        return render_template('Single_Event.html', roof_type=roof_type,
-                               admin=admin,
-                               road_type=road_type, carpark_type=carpark_type,
-                               error=True, error_message="Invalid data",
-                               condition_data=condition_data,
-                               login_text=get_login_text())
+                                admin=admin, form=form,
+                                road_type=road_type, carpark_type=carpark_type,
+                                input_data=input_data, data=data, output=True,
+                                condition_data=condition_data,
+                                login_text=get_login_text())
+        except:
+            # if code breaks return error
+            error = True
+    else:
+        print(form.errors)
+    
+    return render_template('Single_Event.html', roof_type=roof_type,
+                        admin=admin, form=form,
+                        road_type=road_type, carpark_type=carpark_type,
+                        error=error, error_message=error_message,
+                        condition_data=condition_data,
+                        login_text=get_login_text())
 
 
 @app.route('/Multi_Event', methods=['POST'])
@@ -734,15 +684,14 @@ def Multi_Event_POST():
         file = None
         surface_file = None
         multi_surface = False
-
-        username = session['username']
+        error = False
+        error_message = ""
+        username = current_user.username
 
         admin = check_if_admin()
         #  Gats the name of the correct surface and type
-        files = do_sql('''SELECT File_data.name, File_data.path FROM File_data,
-                       User WHERE File_data.file_type=1 and
-                       File_data.user_id=User.id and
-                       User.username="{}";'''.format(username), None)
+        files = models.File_Data.query.filter(models.File_Data.users.any(id=current_user.id)).all()
+        print(files)
 
         if request.form.get('Surface_file_') == 'on':
             multi_surface = True
@@ -756,32 +705,10 @@ def Multi_Event_POST():
             surface = get_surface()[0]
             Type = get_surface()[1]  # Type spesific type of the surface input
 
-            surface_n_type = do_sql("""SELECT Coefficient.name, Site_type.name FROM
-                        Coefficient,Site_type WHERE
-                        Coefficient.type=Site_type.id and
-                        Coefficient.id='{}'""".format(int(Type)), None)
-            try:
-                Area = float(request.form['area'])
-            except:
-                # if area is broken then return error
-                return render_template('Multi_Event.html', error=True,
-                                    admin=admin,
-                                    error_message='Invalid data',
-                                    condition_data=condition_data,
-                                    roof_type=roof_type,
-                                    files=files,
-                                    road_type=road_type,
-                                    carpark_type=carpark_type,
-                                    login_text=get_login_text())
+            Area = float(request.form['area'])
             if Area <= 0:
-                return render_template('Multi_Event.html', error=True,
-                                    admin=admin,
-                                    error_message="Area can't be less than or equal to  0",
-                                    condition_data=condition_data,
-                                    roof_type=roof_type, files=files,
-                                    road_type=road_type,
-                                    carpark_type=carpark_type,
-                                    login_text=get_login_text())
+                error=True
+                error_message = "Area has to be greater than 0"
         
         #  If file uploaded
         if request.form.get('file_') == 'on':
@@ -795,32 +722,30 @@ def Multi_Event_POST():
 
             if not check_file_name(file_name):
                 # error if file name exists under the current user
-                return render_template('Multi_Event.html', error=True,
-                                       admin=admin,
-                                       error_message='File name already used',
-                                       condition_data=condition_data,
-                                       roof_type=roof_type, files=files,
-                                       road_type=road_type,
-                                       carpark_type=carpark_type,
-                                       login_text=get_login_text())
+                error=True,
+                error_message='File name already in use',
 
             if check_file(filepath):
                 # if input file valid then asigns it for render template
                 file = filepath
                 #  Adds the filepath under the user in the database
-                userId = do_sql('''SELECT id FROM User WHERE
-                                username="{}"'''.format(username), None)
-                do_sql('''INSERT INTO File_data (name, path, file_type,
-                       user_id) VALUES (?,?,?,?);''',
-                       (file_name, filepath, 1, userId[0][0]))
+                file_data = models.File_Data(upload_user_id=current_user.id, name=file_name, 
+                                             path=filepath, public=False, time_uploaded=datetime.now())
+                file_data.users.append(current_user)
+                db.session.add(file_data)
+                db.session.commit()
+
+                
             else:
                 #  If file isn't valid then delete it
                 os.remove(filepath)
+                error = True
+                error_message = "Bad file input"
         else:
             file = request.form['location']
 
         # file would only be none if it isn't valid
-        if file is not None:
+        if file is not None and not error:
             #try:
             if multi_surface:
                 
@@ -832,10 +757,10 @@ def Multi_Event_POST():
             else:
                 data = csv_to_data(file, Area, Type, surface)
                 # data based on user input
-                input_data = [surface_n_type[0][1], Area, surface_n_type[0][0]]
+                input_data = [get_surface_name(get_surface()[0]), Area, models.Surface_Material.query.filter_by(id=Type).first().name]
                 graph_data = data[0]
-                data_to_csv("static/output/", username, data[1])
-                output_data = "/static/output/" + username + ".csv"
+                data_to_csv('\static\output\\', username, data[1])
+                output_data = '\static\output\\' + username + ".csv"
 
             return render_template('Multi_Event.html', roof_type=roof_type,
                                    admin=admin, multiSurface=multiSurface,
@@ -846,19 +771,9 @@ def Multi_Event_POST():
                                    output_file=output_data, files=files,
                                    graph_data=json.dumps(graph_data),
                                    login_text=get_login_text())
-            
-#            except:
-#                # returns error if anything breaks
-#                return render_template('Multi_Event.html', error=True,
-#                                       error_message='File Error',
-#                                       roof_type=roof_type, files=files,
-#                                       road_type=road_type,
-#                                       carpark_type=carpark_type,
-#                                       login_text=get_login_text())
-        else:
-            #  Throws an error if there is a problem with the file
-            return render_template('Multi_Event.html', error=True,
-                                   error_message='File Error',
+        
+        return render_template('Multi_Event.html', error=error,
+                                   error_message=error_message,
                                    condition_data=condition_data,
                                    roof_type=roof_type, files=files,
                                    road_type=road_type,
@@ -868,28 +783,23 @@ def Multi_Event_POST():
         return render_template('needToLogin.html', login_text=get_login_text())
 
 
-@app.route('/Login')
+@app.route('/Login', methods=['GET','POST'])
 def Login():
+    error = False
     admin = check_if_admin()
     form = forms.Login()
-    return render_template('Login.html', admin=admin, login_text=get_login_text(),form=form)
+    if form.validate_on_submit():
+        user = models.User.query.filter_by(username=form.username.data).first()
+        if user:
+            if hashlib.sha256(form.password.data.encode('utf-8')).hexdigest() == user.password:
+                print(user.username,' Logged in')
+                login_user(user, form.remember_me.data)
+                return redirect(url_for('Home_Page'))
+            error = True
+    else:
+        print(form.errors.items())
+    return render_template('Login.html', admin=admin, login_text=get_login_text(),form=form,error=error)
 
-
-@app.route('/Login', methods=['GET','POST'])
-def Login_Post():
-
-    admin = check_if_admin()
-    username = request.form['username']
-    # encrypted and hashed password
-    password = hashlib.sha256(request.form['password'].encode('utf-8')).hexdigest()
-    users = do_sql('SELECT * FROM User', None)
-    for user in users:
-        if str(username) == str(user[1]) and str(password) == str(user[2]):
-            # sets session to username if correct user input and redirects
-            session['username'] = username
-            return redirect(url_for('Home_Page'))
-    return render_template('Login.html', error=True, login_text=get_login_text(),
-                           admin=admin,)
 
 
 @app.route('/SignUp', methods=['GET','POST'])
@@ -920,7 +830,8 @@ def Sign_Up():
         if not error:    
             hashed_password = hashlib.sha256(form.password.data.encode('utf-8')).hexdigest()
             print(len(hashed_password))
-            new_user = models.User(username=form.username.data, password=hashed_password, email=form.email.data)
+            new_user = models.User(username=form.username.data, password=hashed_password, 
+                                   email=form.email.data, date_joined=datetime.now())
             db.session.add(new_user)
             db.session.commit()
             return redirect(url_for('Home_Page'))
@@ -931,69 +842,6 @@ def Sign_Up():
     return render_template('SignUp.html', error=error, login_text=get_login_text(),
                            admin=admin, form=form, error_message=error_message)
 
-'''
-@app.route('/SignUp', methods=['POST'])
-def Sign_Up_Post():
-    # get user inputs
-    admin = check_if_admin()
-    username = request.form['username']
-    password = request.form['password']
-    redoPassword = request.form['redoPassword']
-    email = request.form['email']
-
-    unavalableUsernames = do_sql('SELECT username FROM User;', None)
-
-    # username length constraint is 6
-    if len(username) < 6:
-        print("username too short")
-        return render_template('SignUp.html', error=True, username_error=True,
-                               admin=admin,
-                               error_message="Username has to be at least 6 characters",
-                               login_text=get_login_text())
-
-    # if username is taken then throw error
-    for name in unavalableUsernames:
-        if username == name[0]:
-            print("unavalable username")
-            return render_template('SignUp.html', error=True,
-                                   username_error=True,
-                                   admin=admin,
-                                   error_message="Username already exists",
-                                   login_text=get_login_text())
-
-    # if email isnt a valid emain then throw error
-    if not check_email(email):
-        print("Invalid email address")
-        return render_template('SignUp.html', error=True, email_error=True,
-                               admin=admin,
-                               error_message="Invalid email address",
-                               login_text=get_login_text())
-
-    # if password is too short then throw error
-    if len(password) < 8:
-        print('password too short')
-        return render_template('SignUp.html', error=True, password_error=True,
-                               admin=admin,
-                               error_message="Password is less than 8 characters",
-                               login_text=get_login_text())
-
-    # if passwords do not match then throw error
-    if redoPassword != password:
-        print("non matching passwords")
-        return render_template('SignUp.html', error=True, password_error=True,
-                               admin=admin,
-                               error_message="Passwords do not match",
-                               login_text=get_login_text())
-
-    # if it gets past all of the constraints then insert the data
-    # insert the hashed and encrypted version of the password
-    do_sql('INSERT INTO User (username,password,email) VALUES (?,?,?);',
-           (username, hashlib.sha256(password.encode('utf-8')).hexdigest(), email))
-
-    # log in the user and redirect to home
-    session['username'] = username
-    return redirect(url_for('Home_Page'))
-'''
 
 @app.route('/Privacy_Policy')
 def PrivacyPolicy():
@@ -1033,7 +881,7 @@ def Admin():
 
     users = do_sql('''SELECT username,email,id FROM User WHERE administrator=0;''', None)
     print(users)
-    return render_template('Admin.html', login_text=get_login_text(), \
+    return render_template('Admin.html', login_text=get_login_text(), 
                            admin=admin, users=users)
 
 
@@ -1058,79 +906,37 @@ def create_checkout_session():
                     'quantity': 1,
                 },
             ],
+            client_reference_id=current_user.id,
+            customer_email=current_user.email,
             mode='subscription',
             success_url=domain +
             '/Success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=domain + '/Cancelled',
         )
+        
         return redirect(checkout_session.url, code=303)
     except Exception as e:
         print(e)
         return "Server error", 500
-
+    
 
 @app.route('/create-portal-session', methods=['POST'])
 def customer_portal():
-    # For demonstration purposes, we're using the Checkout session to retrieve the customer ID.
-    # Typically this is stored alongside the authenticated user in your database.
-    checkout_session_id = request.form.get('session_id')
-    checkout_session = stripe.checkout.Session.retrieve(checkout_session_id)
-
     # This is the URL to which the customer will be redirected after they are
     # done managing their billing with the portal.
     return_url = domain
+    
+    customer = models.Stripe_Customer.query.filter_by(user_id=current_user.id).first()
 
-    portalSession = stripe.billing_portal.Session.create(
-        customer=checkout_session.customer,
-        return_url=return_url,
-    )
-    return redirect(portalSession.url, code=303)
+    if customer:
+        portalSession = stripe.billing_portal.Session.create(
+            customer=customer.stripe_customer_id,
+            return_url=return_url,
+        )
+        return redirect(portalSession.url, code=303)
+    else:
+        return 404
 
-
-# @app.route('/webhook', methods=['POST'])
-# def webhook_received():
-#     # Replace this endpoint secret with your endpoint's unique secret
-#     # If you are testing with the CLI, find the secret by running 'stripe listen'
-#     # If you are using an endpoint defined with the API or dashboard, look in your webhook settings
-#     # at https://dashboard.stripe.com/webhooks
-#     webhook_secret = stripe_keys['secret_key']
-#     request_data = json.loads(request.data)
-
-#     if webhook_secret:
-#         # Retrieve the event by verifying the signature using the raw body and secret if webhook signing is configured.
-#         signature = request.headers.get('stripe-signature')
-#         try:
-#             event = stripe.Webhook.construct_event(
-#                 payload=request.data, sig_header=signature, secret=webhook_secret)
-#             data = event['data']
-#         except Exception as e:
-#             return e
-#         # Get the type of webhook event sent - used to check the status of PaymentIntents.
-#         event_type = event['type']
-#     else:
-#         data = request_data['data']
-#         event_type = request_data['type']
-#     data_object = data['object']
-
-#     print('event ' + event_type)
-
-#     if event_type == 'checkout.session.completed':
-#         print('🔔 Payment succeeded!')
-#     elif event_type == 'customer.subscription.trial_will_end':
-#         print('Subscription trial will end')
-#     elif event_type == 'customer.subscription.created':
-#         print('Subscription created %s', event.id)
-#     elif event_type == 'customer.subscription.updated':
-#         print('Subscription created %s', event.id)
-#     elif event_type == 'customer.subscription.deleted':
-#         # handle subscription canceled automatically based
-#         # upon your subscription settings. Or if the user cancels it.
-#         print('Subscription canceled: %s', event.id)
-#     elif event_type == 'entitlements.active_entitlement_summary.updated':
-#         # handle active entitlement summary updated
-#         print('Active entitlement summary updated: %s', event.id)
-
-#     return jsonify({'status': 'success'})
 
 @app.route("/webhook", methods=["POST"])
 def stripe_webhook():
@@ -1150,15 +956,31 @@ def stripe_webhook():
         return "Invalid signature", 400
 
     # Handle the checkout.session.completed event
-    if event["type"] == "checkout.session.completed":
-        print("Payment was successful.")
-        print(session['username'] )
-        # TODO: run some custom code here
+    if event["type"] == "checkout.session.completed":        
+        stripe_session = event["data"]["object"]
+        Handle_Payment(stripe_session)
 
     return "Success", 200
 
+
+def Handle_Payment(stripe_session):
+    client_reference_id = stripe_session.get('client_reference_id')
+    stripe_customer_id = stripe_session["customer"]
+    customer = models.Stripe_Customer.query.filter_by(user_id=client_reference_id).first()
+    print("Payment was successful.",customer)
+    if customer:
+        customer.stripe_subscription_id = stripe_session["id"]
+    else:
+        customer = models.Stripe_Customer(user_id=client_reference_id, stripe_subscription_id = stripe_session["id"],
+                                          stripe_customer_id=stripe_customer_id)
+        db.session.add(customer)
+    db.session.commit()
+        
+
+
 @app.errorhandler(404)  # 404 page
 def Page_Not_Found(error):
+    print(error)
     admin=check_if_admin()
     return render_template('404page.html', login_text=get_login_text(),
                            admin=admin)
@@ -1166,6 +988,7 @@ def Page_Not_Found(error):
 
 @app.errorhandler(500)
 def Server_error(error):
+    print(error)
     admin=check_if_admin()
     return render_template('500 page', login_text=get_login_text(),
                            admin=admin)

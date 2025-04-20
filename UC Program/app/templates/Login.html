@@ -2,30 +2,29 @@
 {% block content %}
 <div class="flex-align">
     <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
-        <form action="" method="POST" enctype="multipart/form-data">
+        <form action="" method="POST">
+            {{ form.hidden_tag() }}
             <h1>Login</h1><br>
             {% if error %}<p class="error">Username or password is incorrect</p>{% endif %}
             <div class="input-box">
-                <input type="text" id="Login-username" 
-                name="username" required  maxlength="25" value='' onpaste="return false">
+                {{ form.username }}
                 <p>Username</p>
                 <i class='bx bxs-user'></i>
             </div>
             <div class="input-box">
-                <input type="password" id="Login-password" 
-                name="password" required maxlength="50">
+                {{ form.password }}
                 <p>Password</p>
                 <i class='bx bxs-lock-alt'></i>
             </div>
             
             <div class="remember-forgot">
                 <label>
-                    <input type="checkbox">
+                    {{ form.remember_me }}
                     Remember me
                 </label>
                 <a href="#">Forgot password?</a>
             </div>
-            <button type="submit" class="login-submit">Login</button>
+            <div type="submit" class="login-submit">{{ form.submit }}</div>
             <div class="register-link">
                 <p>Don't have an account? 
                 <a href="/SignUp">Register</a></p>

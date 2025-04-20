@@ -1,9 +1,9 @@
 from flask import Flask
 import os
 
-filedir =  os.path.abspath(os.path.dirname(__file__))
+filedir =  os.path.dirname(os.path.abspath(__file__))
 static_dir= os.path.join(filedir, 'static')
-app = Flask(__name__, static_dir)
+app = Flask(__name__)
 
 from app import routes
 

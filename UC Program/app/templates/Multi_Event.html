@@ -86,7 +86,7 @@
                     <select name="roof_type" id="roof_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                         <option value="">-- Select Material --</option>
                         {% for type in roof_type %}
-                        <option value="{{ type[0] }}" class="option" >{{ type[2] }}</option>
+                        <option value="{{ type.id }}" class="option">{{ type.name }}</option>
                         {% endfor %}
                     </select>
                     <div class="icon-container">
@@ -101,7 +101,7 @@
                     <select name="road_type" id="road_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                         <option value="">-- Select Material --</option>
                         {% for type in road_type %}
-                        <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                        <option value="{{ type.id }}" class="option">{{ type.name }}</option>
                         {% endfor %}
                     </select>
                     <div class="icon-container">
@@ -116,7 +116,7 @@
                     <select name="carpark_type" id="carpark_type" class="selection" method="POST" required onchange="DisplayCondition(value);">
                         <option value="">-- Select Material --</option>
                         {% for type in carpark_type %}
-                        <option value="{{ type[0] }}" class="option">{{ type[2] }}</option>
+                        <option value="{{ type.id }}" class="option">{{ type.name }}</option>
                         {% endfor %}
                     </select>
                     <div class="icon-container">
@@ -153,10 +153,9 @@
             <div id="location" class="select-container">
                 <select name="location" id="location_input" class="selection" required>
                     <option value="">-- Select Climate Data --</option>
-                    <option value="static/climate_data/climate_events_2011_CCC.csv" class="option">Christchurch 2011</option>
-                    <option value="static/climate_data/CCC-2018-climate.csv" class="option">Christchurch 2018</option>
-                    <option value="static/climate_data/CCC-2020-climate.csv" class="option">Christchurch 2020</option>
-                    <option value="static/climate_data/CCC-2021-climate.csv" class="option">Christchurch 2021</option>
+                    <option value="app\static\climate_data\climate_events_2011_CCC.csv" class="option">Christchurch 2011</option>
+                    <option value="app\static\climate_data\CCC-2018-climate.csv" class="option">Christchurch 2018</option>
+                    <option value="app\static\climate_data\CCC-2021-climate.csv" class="option">Christchurch 2021</option>
                     {% for file in files %}
                     <option value="{{ file[1] }}" class="option">{{ file[0] }}</option>
                     {% endfor %}
