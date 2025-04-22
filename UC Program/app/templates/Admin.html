@@ -5,13 +5,15 @@
         <div class="Admin-List">
             <b>Username</b>
             <b>Email</b>
+            <b>Date Joined</b>
         </div>
        <br>
         {% for user in users %}
         <div class="Admin-List">
-            <p>{{user[0]}}</p>
-            <p>{{user[1]}}</p>
-            <button value="{{user[2]}}"><i class='bx bxs-trash'></i></button>
+            <p>{{ user.username}}</p>
+            <p>{{ user.email}}</p>
+            <p>{{ user.date_joined }}</p>
+            <button value="{{user.id}}"><i class='bx bxs-trash'></i></button>
         </div>
         {% endfor %}
     </div>

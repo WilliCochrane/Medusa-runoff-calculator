@@ -10,6 +10,7 @@ User_File = db.Table('User_file',
 class User(db.Model, UserMixin):
     __tablename__ = "User"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(30))
     username = db.Column(db.String(25), unique=True)
     password = db.Column(db.String(200))
     email = db.Column(db.String(254))
@@ -34,7 +35,7 @@ class Stripe_Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
     stripe_customer_id = db.Column(db.String(255), nullable=False)
-    stripe_subscription_id = db.Column(db.String(255), nullable=False)
+    checkout_session_id = db.Column(db.String(255), nullable=False)
 
 class Surface_Material(db.Model):
     __tablename__ = "Coefficient"

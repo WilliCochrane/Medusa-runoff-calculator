@@ -2,6 +2,40 @@
 {% block content %}
 <div class="flex-align">
     <div class="wrapper">
-    </div>
+        <p>Welcome {{ user.name }}.</p>
+        <div>
+            <p>downloaded files</p>
+            {% for file in downloaded_files %}
+                <div>
+                    <p>{{ file.name }}</p>
+                    {% if file.favorite == 1 %}
+                    {% else %}
+                    {% endif %}
+                    <button>Remove</button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div>
+            <p>uploaded files</p>
+            {% for file in uploaded_files %}
+                <div>
+                    <p>{{ file.name }}</p>
+                    <p>{{ file.downloads }}</p>
+                    {% if file.public == 1 %}
+                    {% else %}
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        </div>
+        <form action="/create-portal-session" method="POST">
+            <input type="hidden" id="session-id" name="session_id" value="https://billing.stripe.com/p/login/test_cN2dQU05lcTheRy4gg" />
+            <button id="checkout-and-portal-button" type="submit">Manage your billing information</button>
+        </form>
+        <form action="/Logout" method="POST">
+            <button id="checkout-and-portal-button" type="submit">Logout</button>
+        </form>
+    </div> 
 </div>
 {% endblock %}

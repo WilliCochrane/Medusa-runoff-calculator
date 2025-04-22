@@ -4,6 +4,7 @@ from wtforms.validators import InputRequired, Length, ValidationError
 
 
 class Register(FlaskForm):
+    name = StringField(validators=[InputRequired(), Length(max=30)])
     username = StringField(validators=[InputRequired(), Length(max=25)])
     email = StringField(validators=[InputRequired(), Length(max=254)])    
     password = PasswordField(validators=[InputRequired(), Length(max=50)])
@@ -17,7 +18,7 @@ class Login(FlaskForm):
     
     password = PasswordField(validators=[InputRequired(), Length(max=50)])
     
-    remember_me = BooleanField(default=True)
+    remember_me = BooleanField(default=False)
     
     submit = SubmitField("Login")
 

@@ -22,13 +22,16 @@
                 <li><a href="/">Home</a></li>
                 <li><a href="/Single_Event">Single Event Simulation</a></li>
                 <li><a href="/Multi_Event">Multi Event Simulation</a></li>
-                <li><a href="/Checkout">checkout</a></li>
                 {% if admin %}
                 <li><a href="/Admin">Admin</a></li>
                 {% endif %}
             </ul>
         </nav>
-        <a class="login" href="/Login"><button>{{ login_text }}</button></a>
+        {% if logged_in %}
+            <a class="login" href="/Dashboard"><button>Dashboard</button></a>
+        {% else %}
+            <a class="login" href="/Login"><button>Login</button></a>
+        {% endif %}
     </header>
     {% block content %}
     {% endblock %}

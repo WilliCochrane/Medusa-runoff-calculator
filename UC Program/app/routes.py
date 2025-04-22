@@ -56,16 +56,16 @@ def load_user(user_id):
 
 
 
-def do_sql(sql, values) -> list:
-    dba = sqlite3.connect(filedir + 'database.db')
-    cur = dba.cursor()
-    # If the value isn't none then the change will be commited to the database
-    if values is not None:
-        cur.execute(sql, values)
-        dba.commit()
-    else:  # If value is none then the changes will just be executed
-        cur.execute(sql)
-    return cur.fetchall()
+# def do_sql(sql, values) -> list:
+#     dba = sqlite3.connect(filedir + 'database.db')
+#     cur = dba.cursor()
+#     # If the value isn't none then the change will be commited to the database
+#     if values is not None:
+#         cur.execute(sql, values)
+#         dba.commit()
+#     else:  # If value is none then the changes will just be executed
+#         cur.execute(sql)
+#     return cur.fetchall()
 
 
 # rounds num to sf number of s.f
@@ -478,21 +478,12 @@ def make_filepath_avalable(filepath : str):
 # checks if the user is logged in
 def check_login() -> bool:
     try:
-        print(current_user.username)
         if current_user.username:
             return True
         else:
             return False
     except:
         return False
-
-
-# login text to tell user if logged in or not
-def get_login_text() -> str:
-    if check_login():
-        return 'Logout'
-    else:
-        return 'Login'
 
 
 # checks the validity of the email
@@ -513,13 +504,10 @@ def check_email(email) -> bool:
 # check if the filename already exist for the user
 def check_file_name(filename) -> bool:
     if check_login():
-        # gets all file names for user
-        userFileNames = do_sql('''SELECT File_data.name FROM File_data,User
-                           Where File_data.user_id = User.id
-                           And User.username = "{}";'''.format(session['username']), None)
-        for i in userFileNames:
-            if i[0] == filename:  # check if the name is taken
-                return False
+        # gets all user files where the file is 
+        if filename == models.File_Data.query.filter(models.File_Data.users.any(id=current_user.id),
+                                                      models.File_Data.name == filename).first():
+            return False
         return True
     else:
         return False
@@ -583,44 +571,64 @@ def Setup_data():
 
 def check_if_admin() -> bool:
     try:
-        username = session['username']
-        value = do_sql('''SELECT administrator FROM User WHERE username="{}";'''.format(username), None)
-        if value[0][0] == 1:
+        if current_user.administrator == 1:
+            print('user is an admin')
             return True
         else:
+            print('user isnt an admin')
             return False
     except:
+        print('admin check failed')
         return False
+
+
+def check_subscription() -> bool:
+    if check_login():
+        customer = models.Stripe_Customer.query.filter_by(user_id=current_user.id).first()
+        if customer:
+            try:
+                session = stripe.checkout.Session.retrieve(customer.checkout_session_id, expand=["line_items"])
+                subscription_id = session["subscription"]  # Access the subscription ID
+                subscription = stripe.Subscription.retrieve(subscription_id)
+                print(subscription.status)
+                if subscription.status == 'active':
+                    return True
+            except stripe.error.StripeError as e:
+                print(f"Error retrieving Checkout Session: {e}")
+    return False
 
 
 @app.route('/')
 def Home_Page():
     admin = check_if_admin()
-    return render_template('index.html', admin=admin, login_text=get_login_text())
+    return render_template('index.html', admin=admin, logged_in=check_login())
 
 
 @app.route('/Multi_Event')
 def Multi_Event():
     if check_login():  # if logged do the things
-        # gets the materials for each surface
-        setupData = Setup_data()
-        roof_type = setupData[0]
-        road_type = setupData[1]
-        carpark_type = setupData[2]
-        condition_data = setupData[3]
+        if check_subscription():
+            # gets the materials for each surface
+            setupData = Setup_data()
+            roof_type = setupData[0]
+            road_type = setupData[1]
+            carpark_type = setupData[2]
+            condition_data = setupData[3]
 
-        admin = check_if_admin()
+            admin = check_if_admin()
 
-        # gets all files uploaded from the user
-        files = models.File_Data.query.filter(models.File_Data.users.any(id=current_user.id)).all()
-        return render_template('Multi_Event.html', roof_type=roof_type,
-                               files=files, road_type=road_type,
-                               carpark_type=carpark_type,
-                               condition_data=condition_data,
-                               admin=admin,
-                               login_text=get_login_text())
+            # gets all files uploaded from the user
+            files = models.File_Data.query.filter(models.File_Data.users.any(id=current_user.id)).all()
+            return render_template('Multi_Event.html', roof_type=roof_type,
+                                files=files, road_type=road_type,
+                                carpark_type=carpark_type,
+                                condition_data=condition_data,
+                                admin=admin,
+                                logged_in=check_login())
+        else:
+            return redirect(url_for('Checkout'))
     else:  # not logged in then dont let user do multi event sim
-        return render_template('needToLogin.html', login_text=get_login_text())
+        return render_template('needToLogin.html', logged_in=check_login())
 
 
 @app.route('/Single_Event', methods=['GET','POST'])
@@ -655,7 +663,7 @@ def Single_Event():
                                 road_type=road_type, carpark_type=carpark_type,
                                 input_data=input_data, data=data, output=True,
                                 condition_data=condition_data,
-                                login_text=get_login_text())
+                                logged_in=check_login())
         except:
             # if code breaks return error
             error = True
@@ -667,7 +675,7 @@ def Single_Event():
                         road_type=road_type, carpark_type=carpark_type,
                         error=error, error_message=error_message,
                         condition_data=condition_data,
-                        login_text=get_login_text())
+                        logged_in=check_login())
 
 
 @app.route('/Multi_Event', methods=['POST'])
@@ -770,7 +778,7 @@ def Multi_Event_POST():
                                    input_data=input_data, graph=graph,
                                    output_file=output_data, files=files,
                                    graph_data=json.dumps(graph_data),
-                                   login_text=get_login_text())
+                                   logged_in=check_login())
         
         return render_template('Multi_Event.html', error=error,
                                    error_message=error_message,
@@ -778,9 +786,9 @@ def Multi_Event_POST():
                                    roof_type=roof_type, files=files,
                                    road_type=road_type,
                                    carpark_type=carpark_type,
-                                   login_text=get_login_text())
+                                   llogged_in=check_login())
     else:
-        return render_template('needToLogin.html', login_text=get_login_text())
+        return render_template('needToLogin.html', logged_in=check_login())
 
 
 @app.route('/Login', methods=['GET','POST'])
@@ -798,8 +806,13 @@ def Login():
             error = True
     else:
         print(form.errors.items())
-    return render_template('Login.html', admin=admin, login_text=get_login_text(),form=form,error=error)
+    return render_template('Login.html', admin=admin, logged_in=check_login(),form=form,error=error)
 
+
+@app.route('/Logout', methods=['POST'])
+def Logout():
+    logout_user()
+    return redirect(url_for('Home_Page'))
 
 
 @app.route('/SignUp', methods=['GET','POST'])
@@ -829,9 +842,8 @@ def Sign_Up():
             error_message = "Invalid email"
         if not error:    
             hashed_password = hashlib.sha256(form.password.data.encode('utf-8')).hexdigest()
-            print(len(hashed_password))
             new_user = models.User(username=form.username.data, password=hashed_password, 
-                                   email=form.email.data, date_joined=datetime.now())
+                                   email=form.email.data, date_joined=datetime.now(), name=form.name.data)
             db.session.add(new_user)
             db.session.commit()
             return redirect(url_for('Home_Page'))
@@ -839,14 +851,14 @@ def Sign_Up():
             print(error_message)
         
     admin = check_if_admin()
-    return render_template('SignUp.html', error=error, login_text=get_login_text(),
+    return render_template('SignUp.html', error=error, logged_in=check_login(),
                            admin=admin, form=form, error_message=error_message)
 
 
 @app.route('/Privacy_Policy')
 def PrivacyPolicy():
     admin=check_if_admin()
-    return render_template('Privacy_policy.html', login_text=get_login_text(),
+    return render_template('Privacy_policy.html', logged_in=check_login(),
                            admin=admin)
 
 
@@ -854,7 +866,7 @@ def PrivacyPolicy():
 def Checkout():
     admin=check_if_admin()
     if check_login():
-        return render_template('checkout.html', login_text=get_login_text(),
+        return render_template('checkout.html', logged_in=check_login(),
                            admin=admin)
     else:
         return redirect(url_for('Home_Page'))
@@ -863,25 +875,33 @@ def Checkout():
 @app.route('/Success')
 def Success():
     admin=check_if_admin()
-    return render_template('success.html', login_text=get_login_text(),
+    return render_template('success.html', logged_in=check_login(),
                            admin=admin)
 
 
 @app.route('/Cancelled')
 def Cancelled():
     admin=check_if_admin()
-    return render_template('cancel.html', login_text=get_login_text(),
+    return render_template('cancel.html', logged_in=check_login(),
                            admin=admin)
 
+
+@app.route('/Dashboard')
+def Dashboard():
+    admin=check_if_admin()
+    files = None
+    check_subscription()
+    return render_template('Dashboard.html', logged_in=check_login(),
+                           admin=admin, user=current_user, files=files)
 
 
 @app.route('/Admin')
 def Admin():
     admin = check_if_admin()
 
-    users = do_sql('''SELECT username,email,id FROM User WHERE administrator=0;''', None)
+    users = models.User.query.filter_by(administrator = 0)
     print(users)
-    return render_template('Admin.html', login_text=get_login_text(), 
+    return render_template('Admin.html', logged_in=check_login(), 
                            admin=admin, users=users)
 
 
@@ -924,10 +944,10 @@ def create_checkout_session():
 def customer_portal():
     # This is the URL to which the customer will be redirected after they are
     # done managing their billing with the portal.
-    return_url = domain
+    return_url = domain + '/Dashboard'
     
     customer = models.Stripe_Customer.query.filter_by(user_id=current_user.id).first()
-
+    print(customer)
     if customer:
         portalSession = stripe.billing_portal.Session.create(
             customer=customer.stripe_customer_id,
@@ -935,7 +955,7 @@ def customer_portal():
         )
         return redirect(portalSession.url, code=303)
     else:
-        return 404
+        return "Server error", 500
 
 
 @app.route("/webhook", methods=["POST"])
@@ -971,7 +991,7 @@ def Handle_Payment(stripe_session):
     if customer:
         customer.stripe_subscription_id = stripe_session["id"]
     else:
-        customer = models.Stripe_Customer(user_id=client_reference_id, stripe_subscription_id = stripe_session["id"],
+        customer = models.Stripe_Customer(user_id=client_reference_id, checkout_session_id = stripe_session["id"],
                                           stripe_customer_id=stripe_customer_id)
         db.session.add(customer)
     db.session.commit()
@@ -982,7 +1002,7 @@ def Handle_Payment(stripe_session):
 def Page_Not_Found(error):
     print(error)
     admin=check_if_admin()
-    return render_template('404page.html', login_text=get_login_text(),
+    return render_template('404page.html', logged_in=check_login(),
                            admin=admin)
 
 
@@ -990,5 +1010,5 @@ def Page_Not_Found(error):
 def Server_error(error):
     print(error)
     admin=check_if_admin()
-    return render_template('500 page', login_text=get_login_text(),
+    return render_template('500 page', logged_in=check_login(),
                            admin=admin)
