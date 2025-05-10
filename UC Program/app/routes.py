@@ -850,10 +850,13 @@ def Sign_Up():
                                    email=form.email.data, date_joined=datetime.now(), name=form.name.data)
             db.session.add(new_user)
             db.session.commit()
-            return redirect(url_for('Home_Page'))
+            print("Signup")
+            login_user(new_user, False)
+            return redirect(url_for('Dashboard'))
         else:
-            print(error_message)
-        
+            print(error_message, "111")
+    else:
+        print(form.errors, "Error")
     admin = check_if_admin()
     return render_template('SignUp.html', error=error, logged_in=check_login(),
                            admin=admin, form=form, error_message=error_message)

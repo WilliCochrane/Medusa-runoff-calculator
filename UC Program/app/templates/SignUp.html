@@ -5,18 +5,23 @@
             <form action="" method="POST" enctype="multipart/form-data">
                 <h1>Sign Up</h1>
                 {{ form.hidden_tag() }}
-                <div class="input-box" {% if username_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %} value='' onpaste="return false">
+                <div class="input-box" value='' onpaste="return false">
                     {{ form.username }}
                     <p>Username</p>
+                    <i class='bx bxs-user-pin'></i>
+                </div>
+                <div class="input-box"  value='' onpaste="return false">
+                    {{ form.name }}
+                    <p>Name</p>
                     <i class='bx bxs-user'></i>
                 </div>
 
-                <div class="input-box" {% if email_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
+                <div class="input-box" >
                     {{ form.email }}
                     <p>Email</p>
                     <i class='bx bx-envelope' ></i>
                 </div>
-                <div class="input-box" {% if password_error %} style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
+                <div class="input-box">
                     {{ form.password }}
                     <p>Password</p>
                     <i class='bx bxs-lock-alt'></i>
