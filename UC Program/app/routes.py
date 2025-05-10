@@ -1,5 +1,5 @@
 from app import app
-from flask import Flask, request, render_template, session, redirect, url_for, jsonify, json, current_app
+from flask import Flask, request, render_template, redirect, url_for, jsonify, json, current_app, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
 from math import exp, log, log10, floor, sqrt
 from datetime import datetime
+from dotenv import load_dotenv
 import random
 import string
 import hashlib
@@ -18,26 +19,29 @@ import xlwt
 import csv
 import os
 
+load_dotenv()
 
 stripe_keys = {
-    "secret_key": "sk_test_51QEKXbASoVcyVGhrVn85dRlBcFTOLwkFjXrce6BCyzYIhQoN92EUNCPgkmXcMfl3JGDgK9OhjUeBnZqjg1jXS6cO00gpwYzXCf",
-    "publishable_key": "pk_test_51QEKXbASoVcyVGhr4P0zhYDur1yO2BazoOhUkmhvWAGSm9meP3VbzuzbvmV32cHyaoNXE6isvUPdC3RrrHBx4bHL00QyqwfOE9",
-    "endpoint_secret": "whsec_8a53777483939cc643b64281e1e59fff728d15cb78cbf4fbdfbab074bc2ae49c",
+    "secret_key": os.getenv("STRIPE_SECRET_KEY"),
+    "publishable_key": os.getenv("STRIPE_PUBLISHABLE_KEY"),
+    "endpoint_secret": os.getenv("STRIPE_ENPOINT_SECRET"),
 }
 
 stripe.api_key = stripe_keys["secret_key"]
 
 
-# This bellow is just for ease of use with pythonanywhere
 filedir =  os.path.abspath(os.path.dirname(__file__))
 static_dir = os.path.join(filedir, 'static')
 #domain = 'http://localhost:4242'
 domain = "http://127.0.0.1:4242/"
 UPLOAD_FOLDER = filedir + "\\UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = b'1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'  # No looking
+app.secret_key = os.getenv("APP_SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(filedir, "database.db")
-app.config['SECRET_KEY'] = '1fK#F92m1,-{l1,maw:>}an79&*#^%n678&*'
+app.config['SECRET_KEY'] = os.getenv("APP_SECRET_KEY")
+
+app.config['RECAPTCHA_PUBLIC_KEY'] = os.getenv("RECAPTCHA_SITE_KEY")
+app.config['RECAPTCHA_PRIVATE_KEY'] = os.getenv("RECAPTCHA_SECRET_KEY")
 
 db = SQLAlchemy()
 db.init_app(app)
@@ -630,7 +634,7 @@ def Multi_Event():
     else:  # not logged in then dont let user do multi event sim
         return render_template('needToLogin.html', logged_in=check_login())
 
-
+@login_required
 @app.route('/Single_Event', methods=['GET','POST'])
 def Single_Event():
 

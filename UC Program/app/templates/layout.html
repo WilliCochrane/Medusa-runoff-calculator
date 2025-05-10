@@ -30,14 +30,18 @@
         {% if logged_in %}
             <a class="login" href="/Dashboard"><button>Dashboard</button></a>
         {% else %}
+        <div class="flex-align">
+            <ul class="nav-links">
+                <li><a href="/SignUp">Sign Up</a></li>
+            </ul>
             <a class="login" href="/Login"><button>Login</button></a>
+        </div>
         {% endif %}
     </header>
     {% block content %}
     {% endblock %}
     <footer>
         <div class="footer-top">
-    
         </div>
         <div class="footer-bottom">
             <p>&copy; 2025 William Cochrane</p>
