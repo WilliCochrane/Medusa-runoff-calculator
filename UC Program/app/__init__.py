@@ -6,5 +6,5 @@ static_dir= os.path.join(filedir, 'static')
 app = Flask(__name__)
 
 from app import routes
-if __name__ == '__main__':
-    app.run(port=4242)
+#if __name__ == '__main__':
+app.run(debug=True, port=4242)

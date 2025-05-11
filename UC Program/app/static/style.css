@@ -694,3 +694,17 @@ input::-webkit-inner-spin-button {
   transition: all ease-in-out 0.3s;
   box-shadow: 0 0 60px rgba(255, 255, 255, 0.05);
 }
+
+.File-Upload-Container {
+  width: 40vw;
+}
+
+.File-Upload-Container div {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px;
+}
+
+.File-Upload-Container div *{
+  background-color: #1b1b1f;
+}

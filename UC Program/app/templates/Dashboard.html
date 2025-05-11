@@ -8,22 +8,29 @@
             {% for file in downloaded_files %}
                 <div>
                     <p>{{ file.name }}</p>
-                    {% if file.favorite == 1 %}
-                    {% else %}
-                    {% endif %}
+                    {{ file.upload_user_id }}
                     <button>Remove</button>
                 </div>
             {% endfor %}
         </div>
 
-        <div>
+        <div class="File-Upload-Container">
             <p>uploaded files</p>
+            <div>
+                <b>File Name</b>
+                <b>Downloads</b>
+                <b>Public</b>
+            </div>
+            <br>
             {% for file in uploaded_files %}
                 <div>
                     <p>{{ file.name }}</p>
-                    <p>{{ file.downloads }}</p>
                     {% if file.public == 1 %}
+                    <p>{{ file.downloads }}</p>
+                    <i class='bx bx-check' style="color: green;"></i>
                     {% else %}
+                    <br>
+                    <i class='bx bx-x' style="color: red;"></i>
                     {% endif %}
 
                 </div>

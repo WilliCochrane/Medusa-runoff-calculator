@@ -582,7 +582,6 @@ def check_if_admin() -> bool:
             print('user isnt an admin')
             return False
     except:
-        print('admin check failed')
         return False
 
 
@@ -840,7 +839,7 @@ def Sign_Up():
             error_message = "Password must be at least 8 characters long."
         elif len(form.username.data) < 1:
             error = True
-            error_message = "Password must be at least 1 character long."
+            error_message = "Username must be at least 1 character long."
         elif not check_email(form.email.data):
             error = True
             error_message = "Invalid email"
@@ -854,9 +853,9 @@ def Sign_Up():
             login_user(new_user, False)
             return redirect(url_for('Dashboard'))
         else:
-            print(error_message, "111")
+            print(error_message)
     else:
-        print(form.errors, "Error")
+        print(form.errors, " Form Error")
     admin = check_if_admin()
     return render_template('SignUp.html', error=error, logged_in=check_login(),
                            admin=admin, form=form, error_message=error_message)
@@ -896,10 +895,11 @@ def Cancelled():
 @app.route('/Dashboard')
 def Dashboard():
     admin=check_if_admin()
-    files = None
+    files = models.File_Data.query.filter_by(upload_user_id=current_user.id).all()
+    print(files, current_user, "123")
     check_subscription()
     return render_template('Dashboard.html', logged_in=check_login(),
-                           admin=admin, user=current_user, files=files)
+                           admin=admin, user=current_user, uploaded_files=files)
 
 
 @app.route('/Admin')
