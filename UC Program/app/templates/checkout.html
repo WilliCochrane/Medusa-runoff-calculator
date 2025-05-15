@@ -5,16 +5,30 @@
     <section>
       <div class="product">
         <div class="description">
-          <h3>Starter plan</h3>
+          <h3>Industry plan</h3>
           <h5>$20.00 / month</h5>
         </div>
       </div>
       <form action="/create-checkout-session" method="POST">
         <!-- Add a hidden field with the lookup_key of your Price -->
         <input type="hidden" name="lookup_key" value="test-809536c" />
-        <button id="checkout-and-portal-button" type="submit">Checkout</button>
+        <button id="checkout-and-portal-button" type="submit">Subscribe</button>
       </form>
     </section>
     </div>
+    <div class="wrapper">
+      <section>
+        <div class="product">
+          <div class="description">
+            <h3>Student plan</h3>
+            <h5>Free</h5>
+            <p>Requires Valid Student Id</p>
+          </div>
+        </div>
+        <form action="/create-checkout-session" method="POST">
+          <button id="checkout-and-portal-button" type="submit">Subscribe</button>
+        </form>
+      </section>
+      </div>
 </div>
 {% endblock %}
