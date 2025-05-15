@@ -4,7 +4,7 @@
     <div class="wrapper" {% if error %}style="border-color: rgba(255, 0, 0, .75);"{% endif %}>
         <form action="" method="POST">
             {{ form.hidden_tag() }}
-            <h1>Login</h1><br>
+            <h1>Log In</h1><br>
             {% if error %}<p class="error">Username or password is incorrect</p>{% endif %}
             <div class="input-box">
                 {{ form.username }}
