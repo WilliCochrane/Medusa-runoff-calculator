@@ -54,11 +54,14 @@ LOCAL_PORT = tunnel.local_bind_port
 
 filedir =  os.path.abspath(os.path.dirname(__file__))
 static_dir = os.path.join(filedir, 'static')
-domain = "urbanwaterways.org"
+domain = "https://www.urbanwaterways.org"
 
 UPLOAD_FOLDER = filedir + "\\UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.getenv("APP_SECRET_KEY")
+# Uncomment when pulled in pythonanywhere
+# app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{REMOTE_DB_HOST}:{REMOTE_DB_PORT}/{DB_NAME}"
+# Keep uncommented when in localhost
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@127.0.0.1:{LOCAL_PORT}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("APP_SECRET_KEY")
