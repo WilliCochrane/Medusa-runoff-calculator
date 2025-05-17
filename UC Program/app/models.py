@@ -40,6 +40,7 @@ class Stripe_Customer(db.Model):
 class Surface_Material(db.Model):
     __tablename__ = "Coefficient"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    site = db.Column(db.String(100))
     name = db.Column(db.String(100))
     surface_type = db.Column(db.Integer)
     material_condition_type = db.Column(db.Integer)

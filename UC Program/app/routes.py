@@ -2,6 +2,7 @@ from app import app
 from flask import Flask, request, render_template, redirect, url_for, jsonify, json, current_app, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+from sshtunnel import SSHTunnelForwarder
 from flask_wtf import FlaskForm
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -29,15 +30,37 @@ stripe_keys = {
 
 stripe.api_key = stripe_keys["secret_key"]
 
+# SSH Configuration
+SSH_HOST = 'ssh.pythonanywhere.com'
+SSH_USERNAME = 'willicochrane'
+SSH_PASSWORD = os.getenv("SSH_PASSWORD")
+
+DB_USER = 'willicochrane'
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = 'willicochrane$MEDUSAdb'
+REMOTE_DB_HOST = f'{SSH_USERNAME}.mysql.pythonanywhere-services.com'
+REMOTE_DB_PORT = 3306
+
+# Set up the SSH tunnel
+tunnel = SSHTunnelForwarder(
+    (SSH_HOST, 22),
+    ssh_username=SSH_USERNAME,
+    ssh_password=SSH_PASSWORD,
+    remote_bind_address=(REMOTE_DB_HOST, REMOTE_DB_PORT)
+)
+
+tunnel.start()
+LOCAL_PORT = tunnel.local_bind_port
 
 filedir =  os.path.abspath(os.path.dirname(__file__))
 static_dir = os.path.join(filedir, 'static')
-#domain = 'http://localhost:4242'
-domain = "http://127.0.0.1:4242/"
+domain = "urbanwaterways.org"
+
 UPLOAD_FOLDER = filedir + "\\UPLOAD_FOLDER"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.getenv("APP_SECRET_KEY")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(filedir, "database.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@127.0.0.1:{LOCAL_PORT}/{DB_NAME}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("APP_SECRET_KEY")
 
 app.config['RECAPTCHA_PUBLIC_KEY'] = os.getenv("RECAPTCHA_SITE_KEY")
